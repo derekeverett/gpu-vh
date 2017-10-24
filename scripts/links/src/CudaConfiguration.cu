@@ -1,1 +1,1 @@
-/home/derek/MEGA/hydroResources/gpu-vh-master_w_comments/scripts/../rhic/rhic-harness/src/main/cuda/edu/osu/rhic/harness/init/CudaConfiguration.cu
+/home/derek/github/gpu-vh/scripts/../rhic/rhic-harness/src/main/cuda/edu/osu/rhic/harness/init/CudaConfiguration.cu

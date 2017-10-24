@@ -90,10 +90,14 @@ PRECISION * const __restrict__ ut, PRECISION * const __restrict__ ux, PRECISION 
 		printf("M0=%.3f,\t M1=%.3f,\t M2=%.3f,\t M3=%.3f\n", M0, M1, M2, M3);
 	}
 	*p = equilibriumPressure(*e);
+
+	//why is this statement here? it artificially sets e = p in "dilute" regions
+	/*
 	if (*e < 1.e-7) {
 		*e = 1.e-7;
 		*p = 1.e-7;
 	}
+	*/
 
 	PRECISION P = *p + Pi;
 	PRECISION E = 1/(*e + P);
