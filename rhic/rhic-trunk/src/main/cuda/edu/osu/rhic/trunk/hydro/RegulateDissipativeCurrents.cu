@@ -48,11 +48,11 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		PRECISION e_s = e[s];
 		PRECISION p_s = p[s];
 
-		PRECISION xi0 = 0.1f;
-		PRECISION rhomax = 1.0f;
+		//PRECISION xi0 = 0.1f;
+		//PRECISION rhomax = 1.0f;
 
-xi0=1.0;
-rhomax=10.0;
+		PRECISION xi0 = 1.0;
+		PRECISION rhomax = 10.0;
 
 		PRECISION t2 = t*t;
 

@@ -1,1 +1,1 @@
-/home/derek/github/gpu-vh/scripts/../rhic/rhic-harness/src/main/cuda/edu/osu/rhic/harness/init/CudaConfiguration.cu
+/home/everett.165/github/gpu-vh/scripts/../rhic/rhic-harness/src/main/cuda/edu/osu/rhic/harness/init/CudaConfiguration.cu

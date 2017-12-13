@@ -1,1 +1,1 @@
-/home/derek/github/gpu-vh/scripts/../rhic/rhic-trunk/src/main/cuda/edu/osu/rhic/trunk/eos/EquationOfState.cu
+/home/everett.165/github/gpu-vh/scripts/../rhic/rhic-trunk/src/main/cuda/edu/osu/rhic/trunk/eos/EquationOfState.cu

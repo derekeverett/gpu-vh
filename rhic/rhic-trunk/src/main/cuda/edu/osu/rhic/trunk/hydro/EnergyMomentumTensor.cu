@@ -12,7 +12,7 @@
 #include "edu/osu/rhic/harness/init/CudaConfiguration.cuh"
 #include "edu/osu/rhic/trunk/eos/EquationOfState.cuh"
 
-#define MAX_ITERS 100000
+#define MAX_ITERS 1000000000
 //const PRECISION ACC = 1e-2;
 
 __host__ __device__ 
@@ -81,23 +81,19 @@ PRECISION * const __restrict__ ut, PRECISION * const __restrict__ ux, PRECISION 
 		Pi = M / M0 - M0;
 #endif
 /****************************************************************************/
-//	if (ePrev <= 0.1) {
-//		*e = M0 - M / M0;
-//	} else {
+	if (ePrev <= 0.1) {
+		*e = M0 - M / M0;
+	} else {
 		*e = energyDensityFromConservedVariables(ePrev, M0, M, Pi);
-//	}
+		}
 	if (isnan(*e)) {
 		printf("M0=%.3f,\t M1=%.3f,\t M2=%.3f,\t M3=%.3f\n", M0, M1, M2, M3);
 	}
 	*p = equilibriumPressure(*e);
-
-	//why is this statement here? it artificially sets e = p in "dilute" regions
-	/*
 	if (*e < 1.e-7) {
 		*e = 1.e-7;
 		*p = 1.e-7;
 	}
-	*/
 
 	PRECISION P = *p + Pi;
 	PRECISION E = 1/(*e + P);

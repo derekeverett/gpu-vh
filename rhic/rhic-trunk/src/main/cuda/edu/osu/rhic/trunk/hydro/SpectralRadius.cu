@@ -5,9 +5,6 @@
  *      Author: bazow
  */
 
-//see arXiv:1608.06577v1 p.17 for details
-// simple form because flux vector F_i = v_i * q
-//q is conserved state vector; v_i = u_i / u_tau
 #include <math.h>
 
 #include <cuda.h>

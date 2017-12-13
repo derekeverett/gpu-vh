@@ -7,12 +7,12 @@ DIR_OBJ        = $(DIR_BUILD)rhic
 DEBUG =
 OPTIMIZATION = -O5 
 FLOWTRACE =
-OPTIONS = --relocatable-device-code=true -use_fast_math --ptxas-options=-v -lineinfo -Wno-deprecated-gpu-targets
-LINK_OPTIONS = --cudart static --relocatable-device-code=true -link -Wno-deprecated-gpu-targets
+OPTIONS = --relocatable-device-code=true -use_fast_math --ptxas-options=-v -lineinfo
+LINK_OPTIONS = --cudart static --relocatable-device-code=true -link -L/home/everett.165/libconfig-1.5/lib/.libs -lconfig -L/home/everett.165/googletest-master/googletest/mybuild/ -lgtest
 CFLAGS = $(DEBUG) $(OPTIMIZATION) $(FLOWTRACE) $(OPTIONS)
 COMPILER = nvcc
 LIBS = -lm -lgsl -lgslcblas -lconfig -lgtest
-INCLUDES = -I rhic/rhic-core/src/include -I rhic/rhic-trunk/src/include -I rhic/rhic-harness/src/include  
+INCLUDES = -I rhic/rhic-core/src/include -I rhic/rhic-trunk/src/include -I rhic/rhic-harness/src/include -I /home/everett.165/libconfig-1.5/lib/ -I /home/everett.165/googletest-master/googletest/include/
 
 CPP := $(shell find $(DIR_SRC) -name '*.cpp')
 CU := $(shell find $(DIR_SRC) -name '*.cu')

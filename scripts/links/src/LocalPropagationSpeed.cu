@@ -1,1 +1,1 @@
-/home/derek/github/gpu-vh/scripts/../rhic/rhic-core/src/main/cuda/edu/osu/rhic/core/muscl/LocalPropagationSpeed.cu
+/home/everett.165/github/gpu-vh/scripts/../rhic/rhic-core/src/main/cuda/edu/osu/rhic/core/muscl/LocalPropagationSpeed.cu

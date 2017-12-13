@@ -12,7 +12,7 @@
 #include "edu/osu/rhic/core/muscl/FluxLimiter.cuh"
 #include "edu/osu/rhic/trunk/hydro/DynamicalVariables.cuh"
 
-#define THETA 1.8
+#define THETA 1.1
 
 __device__ 
 inline PRECISION sign(PRECISION x) {

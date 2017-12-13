@@ -5,8 +5,6 @@
  *      Author: bazow
  */
 
-//see arXiv:1608.06577v1 p.8 for details 
-
 #include "edu/osu/rhic/trunk/hydro/TransportCoefficients.cuh"
 #include "edu/osu/rhic/trunk/eos/EquationOfState.cuh" // for bulk terms
 
@@ -26,7 +24,6 @@
 #define SIGMA_4 0.022
 
 // TODO: Eliminate branching.
-// why does this cause branching? it is a thread by thread check (every thread checks the condition, not only some threads)
 __device__ PRECISION bulkViscosityToEntropyDensity(PRECISION T) {
 	PRECISION x = T / 1.01355;
 	if (x > 1.05)

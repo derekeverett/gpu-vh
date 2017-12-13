@@ -30,7 +30,7 @@
 #include "edu/osu/rhic/trunk/hydro/GhostCells.cuh"
 #include "edu/osu/rhic/trunk/hydro/HydrodynamicValidity.cuh"
 
-#define FREQ 10
+#define FREQ 100
 
 void outputDynamicalQuantities(double t, const char *outputDir, void * latticeParams) {
 	output(e, t, outputDir, "e", latticeParams);
@@ -94,7 +94,7 @@ public:
 		return ((double) (end - start)) / CLOCKS_PER_MILLISEC;
 	}
 };
-////see arXiv:1608.06577v1 p.23 for a program flow-chart
+
 void run(void * latticeParams, void * initCondParams, void * hydroParams, const char *rootDirectory, const char *outputDir) {
 	struct LatticeParameters * lattice = (struct LatticeParameters *) latticeParams;
 	struct InitialConditionParameters * initCond = (struct InitialConditionParameters *) initCondParams;

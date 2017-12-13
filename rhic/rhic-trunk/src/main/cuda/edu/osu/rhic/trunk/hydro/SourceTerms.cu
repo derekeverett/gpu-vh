@@ -60,8 +60,6 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	PRECISION t3 = t * t2;
 
 	// time derivatives of u
-	//these are finite differenced
-	////see arXiv:1608.06577v1 p.18 for details
 	PRECISION dtut = (ut - utp) / d_dt;
 	PRECISION dtux = (ux - uxp) / d_dt;
 	PRECISION dtuy = (uy - uyp) / d_dt;
@@ -70,15 +68,14 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	/*********************************************************\
 	 * covariant derivatives
 	 /*********************************************************/
-	////see arXiv:1608.06577v1 p.12 for details
-	PRECISION Dut = ut * dtut + ux * dxut + uy * dyut + un * dnut + t * un * un; //last term is from only nonzero Christoffel symbol
-	PRECISION dut = Dut - t * un * un; //convective time derivative d = u^(mu) * partial_(mu)
+	PRECISION Dut = ut * dtut + ux * dxut + uy * dyut + un * dnut + t * un * un;
+	PRECISION dut = Dut - t * un * un;
 
 	PRECISION dux = ut * dtux + ux * dxux + uy * dyux + un * dnux;
-	PRECISION Dux = -dux; //why the minus sign here?
+	PRECISION Dux = -dux;
 
 	PRECISION duy = ut * dtuy + ux * dxuy + uy * dyuy + un * dnuy;
-	PRECISION Duy = -duy; //?
+	PRECISION Duy = -duy;
 
 	PRECISION dun = ut * dtun + ux * dxun + uy * dyun + un * dnun;
 	PRECISION Dun = -t2 * dun - 2 * t * ut * un;
@@ -120,7 +117,6 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	PRECISION wnx = -wxn / t2;
 	PRECISION wny = -wyn / t2;
 
-	////see arXiv:1608.06577v1 p.13 for details
 	/*********************************************************\
 	 * I1
 	 /*********************************************************/

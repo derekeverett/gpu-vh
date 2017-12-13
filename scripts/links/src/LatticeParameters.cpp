@@ -1,1 +1,1 @@
-/home/derek/github/gpu-vh/scripts/../rhic/rhic-harness/src/main/cpp/edu/osu/rhic/harness/lattice/LatticeParameters.cpp
+/home/everett.165/github/gpu-vh/scripts/../rhic/rhic-harness/src/main/cpp/edu/osu/rhic/harness/lattice/LatticeParameters.cpp

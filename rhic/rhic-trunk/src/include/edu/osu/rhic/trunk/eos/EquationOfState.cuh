@@ -13,7 +13,7 @@
 
 #include "edu/osu/rhic/trunk/hydro/DynamicalVariables.cuh"
 
-#define CONFORMAL_EOS
+//#define CONFORMAL_EOS
 
 // ideal gas of massless quarks and gluons
 //#define EOS_FACTOR 15.6269 // Nc=3, Nf=3

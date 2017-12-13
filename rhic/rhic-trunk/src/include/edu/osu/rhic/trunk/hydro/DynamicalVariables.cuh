@@ -10,8 +10,8 @@
 
 #define NUMBER_CONSERVATION_LAWS 4
 
-//#define PIMUNU 
-//#define PI
+#define PIMUNU 
+#define PI
 
 /*********************************************************/
 #ifndef PI

@@ -1,1 +1,1 @@
-/home/derek/github/gpu-vh/scripts/../rhic/rhic-core/src/main/cuda/edu/osu/rhic/core/muscl/SemiDiscreteKurganovTadmorScheme.cu
+/home/everett.165/github/gpu-vh/scripts/../rhic/rhic-core/src/main/cuda/edu/osu/rhic/core/muscl/SemiDiscreteKurganovTadmorScheme.cu
