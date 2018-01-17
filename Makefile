@@ -12,7 +12,7 @@ LINK_OPTIONS = --cudart static --relocatable-device-code=true -link -L/home/ever
 CFLAGS = $(DEBUG) $(OPTIMIZATION) $(FLOWTRACE) $(OPTIONS)
 COMPILER = nvcc
 LIBS = -lm -lgsl -lgslcblas -lconfig -lgtest
-INCLUDES = -I rhic/rhic-core/src/include -I rhic/rhic-trunk/src/include -I rhic/rhic-harness/src/include -I /home/everett.165/libconfig-1.5/lib/ -I /home/everett.165/googletest-master/googletest/include/
+INCLUDES = -I rhic/rhic-core/src/include -I rhic/rhic-trunk/src/include -I rhic/rhic-harness/src/include -I /home/everett.165/libconfig-1.5/lib/ -I /home/everett.165/googletest-master/googletest/include/ -I freezeout
 
 CPP := $(shell find $(DIR_SRC) -name '*.cpp')
 CU := $(shell find $(DIR_SRC) -name '*.cu')
