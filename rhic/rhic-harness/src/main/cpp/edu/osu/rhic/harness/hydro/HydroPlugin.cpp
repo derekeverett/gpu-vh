@@ -49,8 +49,8 @@ void outputDynamicalQuantities(double t, const char *outputDir, void * latticePa
 	output(u->uy, t, outputDir, "uy", latticeParams);
 	output(u->un, t, outputDir, "un", latticeParams);
 	output(u->ut, t, outputDir, "ut", latticeParams);
-	output(q->ttt, t, outputDir, "ttt", latticeParams);
-	output(q->ttn, t, outputDir, "ttn", latticeParams);
+	//output(q->ttt, t, outputDir, "ttt", latticeParams);
+	//output(q->ttn, t, outputDir, "ttn", latticeParams);
 	#ifdef PIMUNU
 	///*
 	output(q->pixx, t, outputDir, "pixx", latticeParams);
@@ -69,18 +69,18 @@ void outputDynamicalQuantities(double t, const char *outputDir, void * latticePa
 	output(q->Pi, t, outputDir, "Pi", latticeParams);
 	#endif
 	///*
-	output(validityDomain->regulations, t, outputDir, "regulations", latticeParams);
-	output(validityDomain->inverseReynoldsNumberPimunu, t, outputDir, "Rpi", latticeParams);
-	output(validityDomain->inverseReynoldsNumberTilde2Pimunu, t, outputDir, "R2pi", latticeParams);
-	output(validityDomain->inverseReynoldsNumberPi, t, outputDir, "RPi", latticeParams);
-	output(validityDomain->inverseReynoldsNumberTilde2Pi, t, outputDir, "R2Pi", latticeParams);
-	output(validityDomain->knudsenNumberTaupi, t, outputDir, "KnTaupi", latticeParams);
-	output(validityDomain->knudsenNumberTauPi, t, outputDir, "KnTauPi", latticeParams);
+	//output(validityDomain->regulations, t, outputDir, "regulations", latticeParams);
+	//output(validityDomain->inverseReynoldsNumberPimunu, t, outputDir, "Rpi", latticeParams);
+	//output(validityDomain->inverseReynoldsNumberTilde2Pimunu, t, outputDir, "R2pi", latticeParams);
+	//output(validityDomain->inverseReynoldsNumberPi, t, outputDir, "RPi", latticeParams);
+	//output(validityDomain->inverseReynoldsNumberTilde2Pi, t, outputDir, "R2Pi", latticeParams);
+	//output(validityDomain->knudsenNumberTaupi, t, outputDir, "KnTaupi", latticeParams);
+	//output(validityDomain->knudsenNumberTauPi, t, outputDir, "KnTauPi", latticeParams);
 	// for debugging purposes
-	output(validityDomain->taupi, t, outputDir, "taupi", latticeParams);
-	output(validityDomain->dxux, t, outputDir, "dxux", latticeParams);
-	output(validityDomain->dyuy, t, outputDir, "dyuy", latticeParams);
-	output(validityDomain->theta, t, outputDir, "theta", latticeParams);
+	//output(validityDomain->taupi, t, outputDir, "taupi", latticeParams);
+	//output(validityDomain->dxux, t, outputDir, "dxux", latticeParams);
+	//output(validityDomain->dyuy, t, outputDir, "dyuy", latticeParams);
+	//output(validityDomain->theta, t, outputDir, "theta", latticeParams);
 	//*/
 }
 
@@ -195,8 +195,8 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 
 	//open the freezeout surface file
 	ofstream freezeoutSurfaceFile;
-	if (FOFORMAT == 0) freezeoutSurfaceFile.open("output/surface.dat");
-	else freezeoutSurfaceFile.open("output/surface.dat", ios::binary);
+	if (FOFORMAT == 0) freezeoutSurfaceFile.open("output/surface.dat", ios::out);
+	else freezeoutSurfaceFile.open("output/surface.dat", ios::out | ios::binary);
 
 	/************************************************************************************\
 	* Fluid dynamic initialization
@@ -230,7 +230,8 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 
 	for (int n = 1; n <= nt+1; ++n) {
 		// copy variables back to host and write to disk
-		if ((n-1) % FREQ == 0) {
+		if ((n-1) % FREQ == 0)
+		{
 			copyDeviceToHostMemory(bytes);
 			printf("n = %d:%d (t = %.3f),\t (e, p) = (%.3f, %.3f) [GeV/fm^3],\t (T = %.3f [GeV]),\t",
 			n - 1, nt, t, e[sctr]*hbarc, p[sctr]*hbarc, effectiveTemperature(e[sctr])*hbarc);
@@ -241,11 +242,12 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 			//break;
 			//}
 		}
+
 		//************************************************************************************\
-    // Freeze-out finder (Derek)
-    // the freezeout surface file is written in the format which can
-    // be read by iS3D : https://github.com/derekeverett/iS3D
-    //************************************************************************************/
+		// Freeze-out finder (Derek)
+		// the freezeout surface file is written in the format which can
+		// be read by iS3D : https://github.com/derekeverett/iS3D
+		//************************************************************************************/
 		//append the energy density and all hydro variables to storage arrays
 		int nFO = n % FOFREQ;
 		//need all hydro info on host for FO surface finding
@@ -314,7 +316,8 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 									freezeoutSurfaceFile << cor.get_centroid_elem(i,2) + cell_y << " ";
 									if (dim == 4) freezeoutSurfaceFile << cor.get_centroid_elem(i,3) + cell_z << " ";
 									else freezeoutSurfaceFile << cell_z << " ";
-									//then the contravariant surface normal element; note jacobian factors of tau for milne coordinates
+									//then the (covariant?) surface normal element; check jacobian factors of tau for milne coordinates!
+                  //acording to cornelius user guide, corenelius returns covariant components of normal vector without jacobian factors
 									freezeoutSurfaceFile << t * cor.get_normal_elem(i,0) << " ";
 									freezeoutSurfaceFile << t * cor.get_normal_elem(i,1) << " ";
 									freezeoutSurfaceFile << t * cor.get_normal_elem(i,2) << " ";
@@ -337,7 +340,7 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 										//the temperature !this needs to be checked
 										freezeoutSurfaceFile << effectiveTemperature(temp) << " ";
 										//the thermal pressure
-                    freezeoutSurfaceFile << equilibriumPressure(temp) << " ";
+										freezeoutSurfaceFile << equilibriumPressure(temp) << " ";
 										//write ten components of pi_(mu,nu) shear viscous tensor
 										for (int ivar = 5; ivar < 15; ivar++)
 										{
@@ -363,7 +366,7 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 										//the temperature !this needs to be checked
 										freezeoutSurfaceFile << effectiveTemperature(temp) << " ";
 										//the thermal pressure
-                    freezeoutSurfaceFile << equilibriumPressure(temp) << " ";
+										freezeoutSurfaceFile << equilibriumPressure(temp) << " ";
 										//write ten components of pi_(mu,nu) shear viscous tensor
 										for (int ivar = 5; ivar < 15; ivar++)
 										{
@@ -376,89 +379,95 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 									}
 								}
 
-								/*
 								else //write in binary
 								{
-								if (FOTEST) {freezeoutSurfaceFile.write(cell_tau, sizeof(double));}
-								else {freezeoutSurfaceFile.write(cor.get_centroid_elem(i,0) + cell_tau, sizeof(double));}
-								freezeoutSurfaceFile.write(cor.get_centroid_elem(i,1) + cell_x,sizeof(double));
-								freezeoutSurfaceFile.write(cor.get_centroid_elem(i,2) + cell_y,sizeof(double));
-								if (dim == 4) freezeoutSurfaceFile.write(cor.get_centroid_elem(i,3) + cell_z,sizeof(double));
-								else freezeoutSurfaceFile.write(cell_z,sizeof(double));
-								//then the surface normal element; note jacobian factors of +/- tau for milne coordinates
-								freezeoutSurfaceFile.write(t * cor.get_normal_elem(i,0),sizeof(double));
-								freezeoutSurfaceFile.write((-1.0) * t * cor.get_normal_elem(i,1),sizeof(double));
-								freezeoutSurfaceFile.write((-1.0) * t * cor.get_normal_elem(i,2),sizeof(double));
-								if (dim == 4) freezeoutSurfaceFile.write((-1.0) * t * cor.get_normal_elem(i,3),sizeof(double));
-								else freezeoutSurfaceFile.write(0.0,sizeof(double));
-								//write all the necessary hydro dynamic variables by first performing linear interpolation from values at
-								//corners of hypercube
+									//first write the contravariant position vector
+									double pos_tau = cor.get_centroid_elem(i,0) + cell_tau;
+									double pos_x = cor.get_centroid_elem(i,1) + cell_x;
+									double pos_y = cor.get_centroid_elem(i,2) + cell_y;
+									if (dim == 4) double pos_z = cor.get_centroid_elem(i,3) + cell_z;
+									freezeoutSurfaceFile.write( (char*)&pos_tau, sizeof(double));
+									freezeoutSurfaceFile.write( (char*)&pos_x, sizeof(double));
+									freezeoutSurfaceFile.write( (char*)&pos_y, sizeof(double));
+									if (dim == 4) freezeoutSurfaceFile.write( (char*)&pos_z, sizeof(double));
 
-								if (dim == 4) // for 3+1D
-								{
-								//first write the flow velocity
-								for (int ivar = 0; ivar < dim; ivar++)
-								{
-								temp = interpolateVariable4D(hydrodynamic_evoution, ivar, it, ix, iy, iz, tau_frac, x_frac, y_frac, z_frac);
-								freezeoutSurfaceFile.write(temp, sizeof(double));
+									//then the (covariant?) surface normal element; check jacobian factors of tau for milne coordinates!
+                  //acording to cornelius user guide, corenelius returns covariant components of normal vector without jacobian factors
+									double normal_tau = t * cor.get_normal_elem(i,0);
+									double normal_x = t * cor.get_normal_elem(i,1);
+									double normal_y = t * cor.get_normal_elem(i,2);
+									if (dim == 4) double normal_z = t * cor.get_normal_elem(i,3);
+									freezeoutSurfaceFile.write( (char*)&normal_tau, sizeof(double));
+									freezeoutSurfaceFile.write( (char*)&normal_x, sizeof(double));
+									freezeoutSurfaceFile.write( (char*)&normal_y, sizeof(double));
+									if (dim == 4)freezeoutSurfaceFile.write( (char*)&normal_z, sizeof(double));
+
+									//write all the necessary hydro dynamic variables by first performing linear interpolation from values at
+									//corners of hypercube
+
+									if (dim == 4) // for 3+1D
+									{
+										//first write the contravariant flow velocity
+										for (int ivar = 0; ivar < dim; ivar++)
+										{
+											temp = interpolateVariable4D(hydrodynamic_evoution, ivar, it, ix, iy, iz, tau_frac, x_frac, y_frac, z_frac);
+											freezeoutSurfaceFile.write( (char*)&temp, sizeof(double));
+										}
+										//write the energy density
+										temp = interpolateVariable4D(hydrodynamic_evoution, 4, it, ix, iy, iz, tau_frac, x_frac, y_frac, z_frac);
+										freezeoutSurfaceFile.write( (char*)&temp, sizeof(double)); //note : iSpectra reads in file in fm^x units e.g. energy density should be written in fm^-4
+										//the temperature !this needs to be checked
+										double fo_temperature = effectiveTemperature(temp);
+										freezeoutSurfaceFile.write( (char*)&fo_temperature, sizeof(double));
+										//the thermal pressure
+										double fo_pressure = equilibriumPressure(temp);
+										freezeoutSurfaceFile.write( (char*)&fo_pressure, sizeof(double));
+										//write ten contravariant components of pi_(mu,nu) shear viscous tensor
+										for (int ivar = 5; ivar < 15; ivar++)
+										{
+											temp = interpolateVariable4D(hydrodynamic_evoution, ivar, it, ix, iy, iz, tau_frac, x_frac, y_frac, z_frac);
+											freezeoutSurfaceFile.write( (char*)&temp, sizeof(double));
+										}
+										//write the bulk pressure Pi, and start a new line
+										temp = interpolateVariable4D(hydrodynamic_evoution, 15, it, ix, iy, iz, tau_frac, x_frac, y_frac, z_frac);
+										freezeoutSurfaceFile.write( (char*)&temp, sizeof(double));
+									}
+
+									else //for 2+1D
+									{
+										//first write the contravariant flow velocity
+										for (int ivar = 0; ivar < 4; ivar++)
+										{
+											temp = interpolateVariable3D(hydrodynamic_evoution, ivar, it, ix, iy, tau_frac, x_frac, y_frac);
+											freezeoutSurfaceFile.write( (char*)&temp, sizeof(double));
+										}
+										//write the energy density
+										temp = interpolateVariable3D(hydrodynamic_evoution, 4, it, ix, iy, tau_frac, x_frac, y_frac);
+										freezeoutSurfaceFile.write( (char*)&temp, sizeof(double)); //note units of fm^-4 appropriate for iSpectra reading
+										//the temperature !this needs to be checked
+										double fo_temperature = effectiveTemperature(temp);
+										freezeoutSurfaceFile.write( (char*)&fo_temperature, sizeof(double));
+										//the thermal pressure
+										double fo_pressure = equilibriumPressure(temp);
+										freezeoutSurfaceFile.write( (char*)&fo_pressure, sizeof(double));
+										//write ten components of pi_(mu,nu) shear viscous tensor
+										for (int ivar = 5; ivar < 15; ivar++)
+										{
+											temp = interpolateVariable3D(hydrodynamic_evoution, ivar, it, ix, iy, tau_frac, x_frac, y_frac);
+											freezeoutSurfaceFile.write( (char*)&temp, sizeof(double));
+										}
+										//write the bulk pressure Pi, and start a new line
+										temp = interpolateVariable3D(hydrodynamic_evoution, 15, it, ix, iy, tau_frac, x_frac, y_frac);
+										freezeoutSurfaceFile.write( (char*)&temp, sizeof(double));
+									}
+								}
 							}
-							//write the energy density
-							temp = interpolateVariable4D(hydrodynamic_evoution, 4, it, ix, iy, iz, tau_frac, x_frac, y_frac, z_frac);
-							freezeoutSurfaceFile.write(temp, sizeof(double));
-							//the temperature !this needs to be checked
-							freezeoutSurfaceFile.write(effectiveTemperature(temp), sizeof(double));
-							//the baryon chemical potential, writing zero for now
-							freezeoutSurfaceFile.write(0.0, sizeof(double));
-							//  (e + P) / T , the entropy density for zero chem. potentials !check this, note we could be a divide by zero problem if T=0!
-							double e_plus_P_over_T = (temp + equilibriumPressure(temp)) / effectiveTemperature(temp);
-							freezeoutSurfaceFile.write(e_plus_P_over_T, sizeof(double));
-							//write ten components of pi_(mu,nu) shear viscous tensor
-							for (int ivar = 5; ivar < 15; ivar++)
-							{
-							temp = interpolateVariable4D(hydrodynamic_evoution, ivar, it, ix, iy, iz, tau_frac, x_frac, y_frac, z_frac);
-							freezeoutSurfaceFile.write(temp, sizeof(double));
 						}
-						//write the bulk pressure Pi, and start a new line
-						temp = interpolateVariable4D(hydrodynamic_evoution, 15, it, ix, iy, iz, tau_frac, x_frac, y_frac, z_frac);
-						freezeoutSurfaceFile.write(temp, sizeof(double));
 					}
-
-					else //for 2+1D
-					{
-					//first write the flow velocity
-					for (int ivar = 0; ivar < 4; ivar++)
-					{
-					temp = interpolateVariable3D(hydrodynamic_evoution, ivar, it, ix, iy, tau_frac, x_frac, y_frac);
-					freezeoutSurfaceFile.write(temp, sizeof(double));
 				}
-				//write the energy density
-				temp = interpolateVariable3D(hydrodynamic_evoution, 4, it, ix, iy, tau_frac, x_frac, y_frac);
-				freezeoutSurfaceFile.write(temp, sizeof(double)); //note factors of hbarc to give units (GeV/fm^3)
-				//the temperature !this needs to be checked
-				freezeoutSurfaceFile.write(effectiveTemperature(temp), sizeof(double));
-				//the baryon chemical potential, writing zero for now
-				freezeoutSurfaceFile.write(0.0, sizeof(double));
-				//  (e + P) / T , the entropy density for zero chem. potentials !check this, note we could be a divide by zero problem if T=0!
-				double e_plus_P_over_T = (temp + equilibriumPressure(temp)) / effectiveTemperature(temp);
-				freezeoutSurfaceFile.write(e_plus_P_over_T, sizeof(double));
-				//write ten components of pi_(mu,nu) shear viscous tensor
-				for (int ivar = 5; ivar < 15; ivar++)
-				{
-				temp = interpolateVariable3D(hydrodynamic_evoution, ivar, it, ix, iy, tau_frac, x_frac, y_frac);
-				freezeoutSurfaceFile.write(temp, sizeof(double));
 			}
-			//write the bulk pressure Pi, and start a new line
-			temp = interpolateVariable3D(hydrodynamic_evoution, 15, it, ix, iy, tau_frac, x_frac, y_frac);
-			freezeoutSurfaceFile.write(temp, sizeof(double));
 		}
 	}
-	*/
-}
-}
-}
-}
-}
-}
 
 //if all cells are below freezeout temperature end hydro
 accumulator1 = 0;
