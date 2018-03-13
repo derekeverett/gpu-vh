@@ -20,6 +20,456 @@
 
 #define THETA_FUNCTION(X) ((double)X < (double)0 ? (double)0 : (double)1)
 
+//*********************************************************************************************************\
+//* Read in all initial profiles from a single or seperate file
+//*********************************************************************************************************/
+
+//this reads all hydro variables from a single file; this way we do not need to fetch the coordinates many times
+//note that the file must contain values for all dissipative currents, even if they are zero !!!
+void setInitialTmunuFromFile(void * latticeParams, void * initCondParams, void * hydroParams, const char *rootDirectory) {
+    struct LatticeParameters * lattice = (struct LatticeParameters *) latticeParams;
+    struct InitialConditionParameters * initCond = (struct InitialConditionParameters *) initCondParams;
+    struct HydroParameters * hydro = (struct HydroParameters *) hydroParams;
+    int nx = lattice->numLatticePointsX;
+    int ny = lattice->numLatticePointsY;
+    int nz = lattice->numLatticePointsRapidity;
+
+    float x, y, z, e_in, p_in, ut_in, ux_in, uy_in, un_in;
+    //#ifdef PIMUNU
+    float pitt_in, pitx_in, pity_in, pitn_in, pixx_in, pixy_in, pixn_in, piyy_in, piyn_in, pinn_in;
+    //#endif
+    //#ifdef PI
+    float Pi_in;
+    //#endif
+    FILE *fileIn;
+    char fname[255];
+
+    sprintf(fname, "%s/%s", rootDirectory, "/input/Tmunu.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open Tmunu.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n", &x, &y, &z, &e_in, &p_in, &ut_in, &ux_in, &uy_in, &un_in, &pitt_in, &pitx_in, &pity_in, &pitn_in, &pixx_in, &pixy_in, &pixn_in, &piyy_in, &piyn_in, &pinn_in, &Pi_in);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    e[s] =  (PRECISION) e_in;
+                    //ep[s] = (PRECISION) e_in; //set previous step to same value
+                    p[s] = p_in;
+                    u->ut[s] = ut_in;
+                    u->ux[s] = ux_in;
+                    u->uy[s] = uy_in;
+                    u->un[s] = un_in;
+                    up->ut[s] = ut_in; //set previous step to same value
+                    up->ux[s] = ux_in; //...
+                    up->uy[s] = uy_in;
+                    up->un[s] = un_in;
+#ifdef PIMUNU
+                    q->pitt[s] = pitt_in;
+                    q->pitx[s] = pitx_in;
+                    q->pity[s] = pity_in;
+                    q->pitn[s] = pitn_in;
+                    q->pixx[s] = pixx_in;
+                    q->pixy[s] = pixy_in;
+                    q->pixn[s] = pixn_in;
+                    q->piyy[s] = piyy_in;
+                    q->piyn[s] = piyn_in;
+                    q->pinn[s] = pinn_in;
+#endif
+#ifdef PI
+                    q->Pi[s] = Pi_in;
+#endif
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+}
+
+//this function reads a separate file for every hydrodynamic variable
+void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void * hydroParams, const char *rootDirectory) {
+    struct LatticeParameters * lattice = (struct LatticeParameters *) latticeParams;
+    struct InitialConditionParameters * initCond = (struct InitialConditionParameters *) initCondParams;
+    struct HydroParameters * hydro = (struct HydroParameters *) hydroParams;
+    int nx = lattice->numLatticePointsX;
+    int ny = lattice->numLatticePointsY;
+    int nz = lattice->numLatticePointsRapidity;
+
+    float x, y, z, value;
+    FILE *fileIn;
+    char fname[255];
+
+    //energy density
+    sprintf(fname, "%s/%s", rootDirectory, "/input/e.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open e.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    e[s] =  (PRECISION) value;
+                    //ep[s] = (PRECISION) value;
+                    //printf("e [ %d ] = %f\n", s, e[s]);
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //pressure
+    sprintf(fname, "%s/%s", rootDirectory, "/input/p.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open p.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    p[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //ut
+    sprintf(fname, "%s/%s", rootDirectory, "/input/ut.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open ut.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    u->ut[s] =  (PRECISION) value;
+                    up->ut[s] = (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //ux
+    sprintf(fname, "%s/%s", rootDirectory, "/input/ux.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open ux.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    u->ux[s] =  (PRECISION) value;
+                    up->ux[s] = (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //uy
+    sprintf(fname, "%s/%s", rootDirectory, "/input/uy.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open uy.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    u->uy[s] =  (PRECISION) value;
+                    up->uy[s] = (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //un
+    sprintf(fname, "%s/%s", rootDirectory, "/input/un.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open un.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    u->un[s] =  (PRECISION) value;
+                    up->un[s] = (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+#ifdef PIMUNU
+    //pitt
+    sprintf(fname, "%s/%s", rootDirectory, "/input/pitt.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open pitt.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->pitt[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //pitx
+    sprintf(fname, "%s/%s", rootDirectory, "/input/pitx.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open pitx.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->pitx[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //pity
+    sprintf(fname, "%s/%s", rootDirectory, "/input/pity.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open pity.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->pity[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //pitn
+    sprintf(fname, "%s/%s", rootDirectory, "/input/pitn.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open pitn.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->pitn[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //pixx
+    sprintf(fname, "%s/%s", rootDirectory, "/input/pixx.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open pixx.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->pixx[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //pixy
+    sprintf(fname, "%s/%s", rootDirectory, "/input/pixy.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open pixy.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->pixy[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //pixn
+    sprintf(fname, "%s/%s", rootDirectory, "/input/pixn.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open pixn.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->pixn[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //piyy
+    sprintf(fname, "%s/%s", rootDirectory, "/input/piyy.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open piyy.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->piyy[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //piyn
+    sprintf(fname, "%s/%s", rootDirectory, "/input/piyn.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open piyn.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->piyn[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+
+    //pinn
+    sprintf(fname, "%s/%s", rootDirectory, "/input/pinn.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open pinn.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->pinn[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+#endif
+#ifdef PI
+    //bulk
+    sprintf(fname, "%s/%s", rootDirectory, "/input/bulk.dat");
+    fileIn = fopen(fname, "r");
+    if (fileIn == NULL)
+    {
+        printf("Couldn't open bulk.dat!\n");
+    }
+    else
+    {
+        for(int i = 2; i < nx+2; ++i) {
+            for(int j = 2; j < ny+2; ++j) {
+                for(int k = 2; k < nz+2; ++k) {
+                    fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
+                    int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
+                    q->Pi[s] =  (PRECISION) value;
+                }
+            }
+        }
+    }
+    fclose(fileIn);
+#endif
+}
+
 /*********************************************************************************************************\
  * Set initial flow profile
  *		- u^\mu = (1, 0, 0, 0)
@@ -53,7 +503,7 @@ void setFluidVelocityInitialCondition(void * latticeParams, void * hydroParams) 
 
 /*********************************************************************************************************\
  * Set initial shear-stress tensor \pi^\mu\nu
- *		- Navier-Stokes value, i.e. \pi^\mu\nu = 2 * (\epsilon + P) / T * \eta/S * \sigma^\mu\nu 
+ *		- Navier-Stokes value, i.e. \pi^\mu\nu = 2 * (\epsilon + P) / T * \eta/S * \sigma^\mu\nu
  * 	- No initial pressure anisotropies (\pi^\mu\nu = 0)
 /*********************************************************************************************************/
 void setPimunuNavierStokesInitialCondition(void * latticeParams, void * initCondParams, void * hydroParams) {
@@ -144,25 +594,25 @@ void setPimunuInitialCondition(void * latticeParams, void * initCondParams, void
 				for(int k = 2; k < nz+2; ++k) {
 					int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
 #ifdef PIMUNU
-			  		q->pitt[s] = 0;								
-			  		q->pitx[s] = 0;							
-			  		q->pity[s] = 0;						
-			  		q->pitn[s] = 0;								
-			  		q->pixx[s] = 0;			
-			  		q->pixy[s] = 0;				
-			  		q->pixn[s] = 0;								
-			  		q->piyy[s] = 0;			
-			  		q->piyn[s] = 0;								
-			  		q->pinn[s] = 0;	
+			  		q->pitt[s] = 0;
+			  		q->pitx[s] = 0;
+			  		q->pity[s] = 0;
+			  		q->pitn[s] = 0;
+			  		q->pixx[s] = 0;
+			  		q->pixy[s] = 0;
+			  		q->pixn[s] = 0;
+			  		q->piyy[s] = 0;
+			  		q->piyn[s] = 0;
+			  		q->pinn[s] = 0;
 #endif
 #ifdef PI
-			  		q->Pi[s] = 0;	
+			  		q->Pi[s] = 0;
 #endif
 				}
 			}
 		}
 		return;
-	}	
+	}
 }
 
 /*********************************************************************************************************\
@@ -187,7 +637,7 @@ void setConstantEnergyDensityInitialCondition(void * latticeParams, void * initC
 			for(int k = 2; k < nz+2; ++k) {
 				int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
 				e[s] = (PRECISION) ed;
-				p[s] = equilibriumPressure(e[s]);	
+				p[s] = equilibriumPressure(e[s]);
 			}
 		}
 	}
@@ -229,7 +679,7 @@ void setSoundPropagationInitialCondition(void * latticeParams, void * initCondPa
 			vx = cs*de/(e0+p0)*sin(2*PI*abs(x)/lambda);
 			ed = e0 + de*sin(2*PI*abs(x)/lambda);
 		}
-		
+
 		double u0 = 1/sqrt(1-vx*vx);
 
 		for(int j = 2; j < ny+2; ++j) {
@@ -242,16 +692,16 @@ void setSoundPropagationInitialCondition(void * latticeParams, void * initCondPa
 				u->un[s] = 0;
 				u->ut[s] = u0;
 				// initialize \pi^\mu\nu to zero
-        		q->pitt[s] = 0;								
-        		q->pitx[s] = 0;							
-        		q->pity[s] = 0;						
-        		q->pitn[s] = 0;								
-        		q->pixx[s] = 0;			
-        		q->pixy[s] = 0;				
-        		q->pixn[s] = 0;								
-        		q->piyy[s] = 0;			
-        		q->piyn[s] = 0;								
-        		q->pinn[s] = 0;	
+        		q->pitt[s] = 0;
+        		q->pitx[s] = 0;
+        		q->pity[s] = 0;
+        		q->pitn[s] = 0;
+        		q->pixx[s] = 0;
+        		q->pixy[s] = 0;
+        		q->pixn[s] = 0;
+        		q->piyy[s] = 0;
+        		q->piyn[s] = 0;
+        		q->pinn[s] = 0;
 			}
 		}
 	}
@@ -304,7 +754,7 @@ void setGlauberInitialCondition(void * latticeParams, void * initCondParams) {
 	e0 = (double) equilibriumEnergyDensity(T0);
 
 	double eT[nx*ny], eL[nz];
-	energyDensityTransverseProfileAA(eT, nx, ny, dx, dy, initCondParams); 
+	energyDensityTransverseProfileAA(eT, nx, ny, dx, dy, initCondParams);
 	longitudinalEnergyDensityDistribution(eL, latticeParams, initCondParams);
 
 	for(int i = 2; i < nx+2; ++i) {
@@ -315,7 +765,7 @@ void setGlauberInitialCondition(void * latticeParams, void * initCondParams) {
 				double energyDensityLongitudinal = eL[k-2];
 				double ed = (energyDensityTransverse * energyDensityLongitudinal) + 1.e-3;
 				e[s] = (PRECISION) ed;
-				p[s] = equilibriumPressure(e[s]);	
+				p[s] = equilibriumPressure(e[s]);
 			}
 		}
 	}
@@ -354,7 +804,7 @@ void setMCGlauberInitialCondition(void * latticeParams, void * initCondParams) {
 				double energyDensityLongitudinal = eL[k-2];
 				double ed = (energyDensityTransverse * energyDensityLongitudinal) + 1.e-3;
 				e[s] = (PRECISION) ed;
-				p[s] = equilibriumPressure(e[s]);	
+				p[s] = equilibriumPressure(e[s]);
 			}
 		}
 	}
@@ -395,7 +845,7 @@ void setIdealGubserInitialCondition(void * latticeParams, void * initCondParams)
 				u->ux[s] = (PRECISION) (sinh(phi)*x/r);
 				u->uy[s] = (PRECISION) (sinh(phi)*y/r);
 				u->un[s] = 0;
-				u->ut[s] = sqrt(1 + u->ux[s]*u->ux[s] + u->uy[s]*u->uy[s]);							
+				u->ut[s] = sqrt(1 + u->ux[s]*u->ux[s] + u->uy[s]*u->uy[s]);
 			}
 		}
 	}
@@ -441,17 +891,17 @@ void setISGubserInitialCondition(void * latticeParams, const char *rootDirectory
 				u->un[s] = 0;
 				u->ut[s] = sqrt(1 + u1*u1 + u2*u2);
 #ifdef PIMUNU
-        		q->pitt[s] = (PRECISION) pitt;								
-        		q->pitx[s] = (PRECISION) pitx;							
-        		q->pity[s] = (PRECISION) pity;						
-        		q->pitn[s] = (PRECISION) pitn;								
-        		q->pixx[s] = (PRECISION) pixx;			
-        		q->pixy[s] = (PRECISION) pixy;				
-        		q->pixn[s] = (PRECISION) pixn;								
-        		q->piyy[s] = (PRECISION) piyy;			
-        		q->piyn[s] = (PRECISION) piyn;								
-        		q->pinn[s] = (PRECISION) pinn;			
-#endif			
+        		q->pitt[s] = (PRECISION) pitt;
+        		q->pitx[s] = (PRECISION) pitx;
+        		q->pity[s] = (PRECISION) pity;
+        		q->pitn[s] = (PRECISION) pitn;
+        		q->pixx[s] = (PRECISION) pixx;
+        		q->pixy[s] = (PRECISION) pixy;
+        		q->pixn[s] = (PRECISION) pixn;
+        		q->piyy[s] = (PRECISION) piyy;
+        		q->piyn[s] = (PRECISION) piyn;
+        		q->pinn[s] = (PRECISION) pinn;
+#endif
 			}
 		}
 	}
@@ -492,7 +942,7 @@ void setSodShockTubeInitialCondition(void * latticeParams, void * initCondParams
 				u->ux[s] = 0;
 				u->uy[s] = 0;
 				u->un[s] = 0;
-				u->ut[s] = 1;							
+				u->ut[s] = 1;
 			}
 		}
 	}
@@ -530,7 +980,7 @@ void set2dSodShockTubeInitialCondition(void * latticeParams, void * initCondPara
 				u->ux[s] = 0;
 				u->uy[s] = 0;
 				u->un[s] = 0;
-				u->ut[s] = 1;							
+				u->ut[s] = 1;
 			}
 		}
 	}
@@ -585,7 +1035,7 @@ void setImplosionBoxInitialCondition(void * latticeParams, void * initCondParams
 				u->ux[s] = 0;
 				u->uy[s] = 0;
 				u->un[s] = 0;
-				u->ut[s] = 1;							
+				u->ut[s] = 1;
 			}
 		}
 	}
@@ -635,7 +1085,7 @@ void setRayleighTaylorInstibilityInitialCondition(void * latticeParams, void * i
 				u->ux[s] = 0;
 				u->uy[s] = 0;
 				u->un[s] = 0;
-				u->ut[s] = 1;								
+				u->ut[s] = 1;
 			}
 		}
 	}
@@ -680,7 +1130,7 @@ void setGaussianPulseInitialCondition(void * latticeParams, void * initCondParam
 				u->uy[s] = (1+cos(2*M_PI*x/Lx))*(1+cos(2*M_PI*y/Ly));
 //				u->uy[s] = 0;
 				u->un[s] = 0;
-				u->ut[s] = sqrt(1+u->uy[s]*u->uy[s]);							
+				u->ut[s] = sqrt(1+u->uy[s]*u->uy[s]);
 			}
 		}
 	}
@@ -690,7 +1140,7 @@ void setGaussianPulseInitialCondition(void * latticeParams, void * initCondParam
 /*********************************************************************************************************\
  * Initial conditions to use.
  *	Set the energy density, pressure, fluid velocity u^\mu, and \pi^\mu\ny.
- * 	0 - constant energy density 
+ * 	0 - constant energy density
  *		1 - Isreal-Stewart hydrodynamic Gubser flow test
  *		2 - Continous optical Glauber
  *		3 - Ideal hydrodynamic Gubser flow test
@@ -731,7 +1181,7 @@ void setInitialConditions(void * latticeParams, void * initCondParams, void * hy
 			setMCGlauberInitialCondition(latticeParams, initCondParams);
 			setFluidVelocityInitialCondition(latticeParams, hydroParams);
 			setPimunuInitialCondition(latticeParams, initCondParams, hydroParams);
-			return;		
+			return;
 		}
 		case 5: {
 			printf("Relativistic Sod shock-tube test.\n");
@@ -749,20 +1199,29 @@ void setInitialConditions(void * latticeParams, void * initCondParams, void * hy
 			setRayleighTaylorInstibilityInitialCondition(latticeParams, initCondParams);
 			return;
 		}
-/*		case 8: {
+		case 8: {
 			printf("Implosion in a box test.\n");
 			setGaussianPulseInitialCondition(latticeParams, initCondParams);
 			return;
 		}
-*/
 		case 9: {
 			printf("Relativistic 2d Sod shock-tube test.\n");
 			set2dSodShockTubeInitialCondition(latticeParams, initCondParams);
 			return;
 		}
+		case 10: {
+      printf("Reading initial T ^mu nu from input/e.dat , input/p.dat , etc... \n");
+      setInitialTmunuFromFiles(latticeParams, initCondParams, hydroParams, rootDirectory);
+      return;
+    }
+    case 11: {
+      printf("Reading initial T ^mu nu from /input/Tmunu.dat \n");
+      setInitialTmunuFromFile(latticeParams, initCondParams, hydroParams, rootDirectory);
+      return;
+    }
 		default: {
 			printf("Initial condition type not defined. Exiting ...\n");
 			exit(-1);
-		}	
+		}
 	}
 }
