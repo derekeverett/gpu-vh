@@ -277,6 +277,7 @@ void copyHostToDeviceMemory(size_t bytes) {
 	cudaMemcpy(d_uy, u->uy, bytes, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_un, u->un, bytes, cudaMemcpyHostToDevice);
 
+	//Also initialize the value of up on the device!
 	cudaMemcpy(d_utp, u->ut, bytes, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_uxp, u->ux, bytes, cudaMemcpyHostToDevice);
 	cudaMemcpy(d_uyp, u->uy, bytes, cudaMemcpyHostToDevice);

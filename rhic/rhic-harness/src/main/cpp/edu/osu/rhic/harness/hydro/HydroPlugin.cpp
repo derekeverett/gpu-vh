@@ -385,7 +385,8 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 									double pos_tau = cor.get_centroid_elem(i,0) + cell_tau;
 									double pos_x = cor.get_centroid_elem(i,1) + cell_x;
 									double pos_y = cor.get_centroid_elem(i,2) + cell_y;
-									if (dim == 4) double pos_z = cor.get_centroid_elem(i,3) + cell_z;
+									double pos_z = 0.0;
+									if (dim == 4) pos_z = cor.get_centroid_elem(i,3) + cell_z;
 									freezeoutSurfaceFile.write( (char*)&pos_tau, sizeof(double));
 									freezeoutSurfaceFile.write( (char*)&pos_x, sizeof(double));
 									freezeoutSurfaceFile.write( (char*)&pos_y, sizeof(double));
@@ -396,7 +397,8 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 									double normal_tau = t * cor.get_normal_elem(i,0);
 									double normal_x = t * cor.get_normal_elem(i,1);
 									double normal_y = t * cor.get_normal_elem(i,2);
-									if (dim == 4) double normal_z = t * cor.get_normal_elem(i,3);
+									double normal_z = 0.0;
+									if (dim == 4) normal_z = t * cor.get_normal_elem(i,3);
 									freezeoutSurfaceFile.write( (char*)&normal_tau, sizeof(double));
 									freezeoutSurfaceFile.write( (char*)&normal_x, sizeof(double));
 									freezeoutSurfaceFile.write( (char*)&normal_y, sizeof(double));
@@ -467,7 +469,6 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 				}
 			}
 		}
-	}
 
 //if all cells are below freezeout temperature end hydro
 accumulator1 = 0;
