@@ -10,9 +10,9 @@
 #include "edu/osu/rhic/trunk/hydro/RegulateDissipativeCurrents.cuh"
 
 #ifndef IDEAL
-__global__ 
-void regulateDissipativeCurrents(PRECISION t, 
-CONSERVED_VARIABLES * const __restrict__ currrentVars, 
+__global__
+void regulateDissipativeCurrents(PRECISION t,
+CONSERVED_VARIABLES * const __restrict__ currentVars,
 const PRECISION * const __restrict__ e, const PRECISION * const __restrict__ p,
 const FLUID_VELOCITY * const __restrict__ u,
 VALIDITY_DOMAIN * const __restrict__ validityDomain
@@ -24,18 +24,18 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		unsigned int i = threadID % d_nx + N_GHOST_CELLS_M;
 		unsigned int s = columnMajorLinearIndex(i, j, k, d_ncx, d_ncy);
 
-		PRECISION pitt = currrentVars->pitt[s];
-		PRECISION pitx = currrentVars->pitx[s];
-		PRECISION pity = currrentVars->pity[s];
-		PRECISION pitn = currrentVars->pitn[s];
-		PRECISION pixx = currrentVars->pixx[s];
-		PRECISION pixy = currrentVars->pixy[s];
-		PRECISION pixn = currrentVars->pixn[s];
-		PRECISION piyy = currrentVars->piyy[s];
-		PRECISION piyn = currrentVars->piyn[s];
-		PRECISION pinn = currrentVars->pinn[s];
+		PRECISION pitt = currentVars->pitt[s];
+		PRECISION pitx = currentVars->pitx[s];
+		PRECISION pity = currentVars->pity[s];
+		PRECISION pitn = currentVars->pitn[s];
+		PRECISION pixx = currentVars->pixx[s];
+		PRECISION pixy = currentVars->pixy[s];
+		PRECISION pixn = currentVars->pixn[s];
+		PRECISION piyy = currentVars->piyy[s];
+		PRECISION piyn = currentVars->piyn[s];
+		PRECISION pinn = currentVars->pinn[s];
 #ifdef Pi
-		PRECISION Pi = currrentVars->Pi[s];
+		PRECISION Pi = currentVars->Pi[s];
 #else
 		PRECISION Pi = 0;
 #endif
@@ -57,13 +57,14 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		PRECISION t2 = t*t;
 
 		PRECISION pipi = pitt*pitt-2*pitx*pitx-2*pity*pity+pixx*pixx+2*pixy*pixy+piyy*piyy-2*pitn*pitn*t2+2*pixn*pixn*t2+2*piyn*piyn*t2+pinn*pinn*t2*t2;
-		PRECISION spipi = sqrtf(fabsf(pipi+3*Pi*Pi));
+		//PRECISION spipi = sqrtf(fabsf(pipi+3*Pi*Pi));
+		PRECISION spipi = sqrtf(fabsf(pipi));
 		PRECISION pimumu = pitt - pixx - piyy - pinn*t*t;
 		PRECISION piu0 = -pitn*t2*un + pitt*ut - pitx*ux - pity*uy;
 		PRECISION piu1 = -pixn*t2*un + pitx*ut - pixx*ux - pixy*uy;
 		PRECISION piu2 = -piyn*t2*un + pity*ut - pixy*ux - piyy*uy;
 		PRECISION piu3 = -pinn*t2*un + pitn*ut - pixn*ux - piyn*uy;
-		
+
 		PRECISION a1 = fdividef(spipi, rhomax)*rsqrtf(e_s*e_s+3*p_s*p_s);
 		PRECISION den = xi0*rhomax*spipi;
 ///*
@@ -85,17 +86,27 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		PRECISION fac = fdividef(tanhf(rho), rho);
 		if(fabsf(rho)<1.e-7) fac = 1;
 
-		currrentVars->pitt[s] *= fac;
-		currrentVars->pitx[s] *= fac;
-		currrentVars->pity[s] *= fac;
-		currrentVars->pitn[s] *= fac;
-		currrentVars->pixx[s] *= fac;
-		currrentVars->pixy[s] *= fac;
-		currrentVars->pixn[s] *= fac;
-		currrentVars->piyy[s] *= fac;
-		currrentVars->piyn[s] *= fac;
-		currrentVars->pinn[s] *= fac;
-		// TODO: Should we regulate \Pi here?
+		//regulate the shear stress
+		currentVars->pitt[s] *= fac;
+		currentVars->pitx[s] *= fac;
+		currentVars->pity[s] *= fac;
+		currentVars->pitn[s] *= fac;
+		currentVars->pixx[s] *= fac;
+		currentVars->pixy[s] *= fac;
+		currentVars->pixn[s] *= fac;
+		currentVars->piyy[s] *= fac;
+		currentVars->piyn[s] *= fac;
+		currentVars->pinn[s] *= fac;
+
+		//regulate the bulk pressure according to it's inverse reynolds #
+		PRECISION rhoBulk = abs(Pi) / sqrtf(e_s * e_s + 3 * p_s * p_s);
+		if(isnan(rhoBulk) == 1) printf("found rhoBulk Nan\n");
+    PRECISION facBulk = tanh(rhoBulk) / rhoBulk;
+    if(fabs(rhoBulk) < 1.e-7) facBulk = 1.0;
+    if(isnan(facBulk) == 1) printf("found facBulk Nan\n");
+
+		//regulate bulk pressure
+		currentVars->Pi[s] *= facBulk;
 
 		validityDomain->regulations[s] = fac;
 	}
