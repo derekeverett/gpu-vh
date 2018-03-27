@@ -25,7 +25,8 @@
 
 // TODO: Eliminate branching.
 __device__ PRECISION bulkViscosityToEntropyDensity(PRECISION T) {
-	PRECISION x = T / 1.01355;
+	PRECISION x = T / 1.01355; //peak bulk pressure near (unphysical) T = 200 MeV 
+	//PRECISION x = T / 0.785498; //peak bulk pressure at physical temperature  T = 155 MeV
 	if (x > 1.05)
 		return LAMBDA_1 * exp(-(x - 1) / SIGMA_1) + LAMBDA_2 * exp(-(x - 1) / SIGMA_2) + 0.001;
 	else if (x < 0.995)

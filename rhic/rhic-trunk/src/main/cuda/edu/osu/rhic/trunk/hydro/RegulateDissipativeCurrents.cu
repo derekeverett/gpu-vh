@@ -23,7 +23,7 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		unsigned int j = (threadID % (d_nx * d_ny)) / d_nx + N_GHOST_CELLS_M;
 		unsigned int i = threadID % d_nx + N_GHOST_CELLS_M;
 		unsigned int s = columnMajorLinearIndex(i, j, k, d_ncx, d_ncy);
-
+		#ifdef PIMUNU
 		PRECISION pitt = currentVars->pitt[s];
 		PRECISION pitx = currentVars->pitx[s];
 		PRECISION pity = currentVars->pity[s];
@@ -34,11 +34,23 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		PRECISION piyy = currentVars->piyy[s];
 		PRECISION piyn = currentVars->piyn[s];
 		PRECISION pinn = currentVars->pinn[s];
-#ifdef Pi
+		#else
+		PRECISION pitt = 0.0;
+		PRECISION pitx = 0.0;
+		PRECISION pity = 0.0;
+		PRECISION pitn = 0.0;
+		PRECISION pixx = 0.0;
+		PRECISION pixy = 0.0;
+		PRECISION pixn = 0.0;
+		PRECISION piyy = 0.0;
+		PRECISION piyn = 0.0;
+		PRECISION pinn = 0.0;
+		#endif
+		#ifdef Pi
 		PRECISION Pi = currentVars->Pi[s];
-#else
+		#else
 		PRECISION Pi = 0;
-#endif
+		#endif
 
 		PRECISION ut = u->ut[s];
 		PRECISION ux = u->ux[s];
@@ -87,6 +99,7 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		if(fabsf(rho)<1.e-7) fac = 1;
 
 		//regulate the shear stress
+		#ifdef PIMUNU
 		currentVars->pitt[s] *= fac;
 		currentVars->pitx[s] *= fac;
 		currentVars->pity[s] *= fac;
@@ -97,6 +110,7 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		currentVars->piyy[s] *= fac;
 		currentVars->piyn[s] *= fac;
 		currentVars->pinn[s] *= fac;
+		#endif
 
 		//regulate the bulk pressure according to it's inverse reynolds #
 		PRECISION rhoBulk = abs(Pi) / sqrtf(e_s * e_s + 3 * p_s * p_s);
@@ -106,8 +120,9 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
     if(isnan(facBulk) == 1) printf("found facBulk Nan\n");
 
 		//regulate bulk pressure
+		#ifdef PI
 		currentVars->Pi[s] *= facBulk;
-
+		#endif
 		validityDomain->regulations[s] = fac;
 	}
 }
