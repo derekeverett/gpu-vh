@@ -115,7 +115,6 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		#endif
 
 		//regulate the bulk pressure according to it's inverse reynolds #
-		#ifdef REGULATE_BULK
 		PRECISION rhoBulk = abs(Pi) / sqrtf(e_s * e_s + 3 * p_s * p_s);
 		if(isnan(rhoBulk) == 1) printf("found rhoBulk Nan\n");
     PRECISION facBulk = tanh(rhoBulk) / rhoBulk;
@@ -125,9 +124,7 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		//regulate bulk pressure
 		#ifdef PI
 		currentVars->Pi[s] *= facBulk;
-		#endif PI
-		#endif REGULATE_BULK
-
+		#endif
 		validityDomain->regulations[s] = fac;
 	}
 }
