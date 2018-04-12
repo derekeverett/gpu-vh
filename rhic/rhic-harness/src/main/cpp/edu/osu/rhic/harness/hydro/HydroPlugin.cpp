@@ -267,6 +267,7 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 		//the n=1 values are written to the it = 2 index of array, so don't start until here
 		int start;
 		if (n <= FOFREQ) start = 2;
+		//if (n <= FOFREQ) start = 1;
 		else start = 0;
 		if (nFO == FOFREQ - 1) //call the freezeout finder should this be put before the values are set?
 		{
@@ -295,7 +296,9 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 							{
 								double temp = 0.0; //temporary variable
 								//first write the position of the centroid of surface element
-								double cell_tau = t0 + ((double)(n - FOFREQ + it)) * dt; //check if this is the correct time!
+								double cell_tau;
+                if (n <= FOFREQ) cell_tau = t0 + ( (double)(n - FOFREQ + (it-1) ) )* dt; //check if this is the correct time!
+                else cell_tau = t0 + ((double)(n - FOFREQ + it)) * dt; //check if this is the correct time!
 								double cell_x = (double)ix * dx  - (((double)(nx-1)) / 2.0 * dx);
 								double cell_y = (double)iy * dy  - (((double)(ny-1)) / 2.0 * dy);
 								double cell_z = (double)iz * dz  - (((double)(nz-1)) / 2.0 * dz);
