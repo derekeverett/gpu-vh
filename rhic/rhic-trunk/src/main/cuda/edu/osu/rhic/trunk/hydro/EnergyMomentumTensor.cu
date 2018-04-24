@@ -12,10 +12,10 @@
 #include "edu/osu/rhic/harness/init/CudaConfiguration.cuh"
 #include "edu/osu/rhic/trunk/eos/EquationOfState.cuh"
 
-#define MAX_ITERS 1000000000
+#define MAX_ITERS 1000000
 //const PRECISION ACC = 1e-2;
 
-__host__ __device__ 
+__host__ __device__
 PRECISION energyDensityFromConservedVariables(PRECISION ePrev, PRECISION M0, PRECISION M, PRECISION Pi) {
 #ifndef CONFORMAL_EOS
 	PRECISION e0 = ePrev;	// initial guess for energy density
@@ -32,21 +32,24 @@ PRECISION energyDensityFromConservedVariables(PRECISION ePrev, PRECISION M0, PRE
 		PRECISION f = e0 + D;
 		PRECISION fp = 1 - ((cs2 - cst2)*(B + D*H - ((cs2 - cst2)*cst2*D*M0)/e0))/(cst2*e0*H);
 
-		PRECISION e = e0 - f/fp;
+		PRECISION converg_factor = 0.9;
+		PRECISION e;
+		if (j < MAX_ITERS / 2) e = e0 - f/fp;
+		else e = e0 - converg_factor * f/fp;
 		if(fabsf(e - e0) <=  0.001 * fabsf(e)) return e;
 		e0 = e;
 	}
 //	printf("Maximum number of iterations exceeded.\n");
-	printf("Maximum number of iterations exceeded.\tePrev=%.3f,\tM0=%.3f,\t M=%.3f,\t Pi=%.3f\n",ePrev,M0,M,Pi);
+	printf("Maximum number of iterations exceeded.\tePrev=%.3f,\tM0=%.3f,\t M=%.3f,\t Pi=%.3f \n", ePrev, M0, M, Pi);
 	return e0;
 #else
 	return fabsf(sqrtf(fabsf(4 * M0 * M0 - 3 * M)) - M0);
 #endif
 }
 
-__host__ __device__ 
+__host__ __device__
 void getInferredVariables(PRECISION t, const PRECISION * const __restrict__ q, PRECISION ePrev,
-PRECISION * const __restrict__ e, PRECISION * const __restrict__ p, 
+PRECISION * const __restrict__ e, PRECISION * const __restrict__ p,
 PRECISION * const __restrict__ ut, PRECISION * const __restrict__ ux, PRECISION * const __restrict__ uy, PRECISION * const __restrict__ un
 ) {
 	PRECISION ttt = q[0];
@@ -87,7 +90,7 @@ PRECISION * const __restrict__ ut, PRECISION * const __restrict__ ux, PRECISION 
 		*e = energyDensityFromConservedVariables(ePrev, M0, M, Pi);
 		}
 	if (isnan(*e)) {
-		printf("M0=%.3f,\t M1=%.3f,\t M2=%.3f,\t M3=%.3f\n", M0, M1, M2, M3);
+		printf("\n e is nan. M0=%.3f,\t M1=%.3f,\t M2=%.3f,\t M3=%.3f,\t ttt=%.3f,\t ttx=%.3f,\t tty=%.3f,\t ttn=%.3f, \tpitt=%.3f,\t pitx=%.3f,\t pity=%.3f,\t pitn=%.3f\n", M0, M1, M2, M3, ttt, ttx, tty, ttn, pitt, pitx, pity, pitn);
 	}
 	*p = equilibriumPressure(*e);
 	if (*e < 1.e-7) {
@@ -104,9 +107,9 @@ PRECISION * const __restrict__ ut, PRECISION * const __restrict__ ux, PRECISION 
 	*un = M3 * E2;
 }
 
-__global__ 
-void setInferredVariablesKernel(const CONSERVED_VARIABLES * const __restrict__ q, 
-PRECISION * const __restrict__ e, PRECISION * const __restrict__ p, FLUID_VELOCITY * const __restrict__ u, 
+__global__
+void setInferredVariablesKernel(const CONSERVED_VARIABLES * const __restrict__ q,
+PRECISION * const __restrict__ e, PRECISION * const __restrict__ p, FLUID_VELOCITY * const __restrict__ u,
 PRECISION t
 ) {
 	unsigned int threadID = blockDim.x * blockIdx.x + threadIdx.x;
@@ -153,52 +156,52 @@ PRECISION t
 //===================================================================
 // Components of T^{\mu\nu} in (\tau,x,y,\eta_s)-coordinates
 //===================================================================
-__host__ __device__ 
+__host__ __device__
 PRECISION Ttt(PRECISION e, PRECISION p, PRECISION ut, PRECISION pitt) {
 	return (e+p)*ut*ut-p+pitt;
 }
 
-__host__ __device__ 
+__host__ __device__
 PRECISION Ttx(PRECISION e, PRECISION p, PRECISION ut, PRECISION ux, PRECISION pitx) {
 	return (e+p)*ut*ux+pitx;
 }
 
-__host__ __device__ 
+__host__ __device__
 PRECISION Tty(PRECISION e, PRECISION p, PRECISION ut, PRECISION uy, PRECISION pity) {
 	return (e+p)*ut*uy+pity;
 }
 
-__host__ __device__ 
+__host__ __device__
 PRECISION Ttn(PRECISION e, PRECISION p, PRECISION ut, PRECISION un, PRECISION pitn) {
 	return (e+p)*ut*un+pitn;
 }
 
-__host__ __device__ 
+__host__ __device__
 PRECISION Txx(PRECISION e, PRECISION p, PRECISION ux, PRECISION pixx) {
 	return (e+p)*ux*ux+p+pixx;
 }
 
-__host__ __device__ 
+__host__ __device__
 PRECISION Txy(PRECISION e, PRECISION p, PRECISION ux, PRECISION uy, PRECISION pixy) {
 	return (e+p)*ux*uy+pixy;
 }
 
-__host__ __device__ 
+__host__ __device__
 PRECISION Txn(PRECISION e, PRECISION p, PRECISION ux, PRECISION un, PRECISION pixn) {
 	return (e+p)*ux*un+pixn;
 }
 
-__host__ __device__ 
+__host__ __device__
 PRECISION Tyy(PRECISION e, PRECISION p, PRECISION uy, PRECISION piyy) {
 	return (e+p)*uy*uy+p+piyy;
 }
 
-__host__ __device__ 
+__host__ __device__
 PRECISION Tyn(PRECISION e, PRECISION p, PRECISION uy, PRECISION un, PRECISION piyn) {
 	return (e+p)*uy*un+piyn;
 }
 
-__host__ __device__ 
+__host__ __device__
 PRECISION Tnn(PRECISION e, PRECISION p, PRECISION un, PRECISION pinn, PRECISION t) {
 	return (e+p)*un*un+p/t/t+pinn;
 }

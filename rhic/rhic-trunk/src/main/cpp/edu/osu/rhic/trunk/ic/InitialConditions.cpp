@@ -57,7 +57,7 @@ void setInitialTmunuFromFile(void * latticeParams, void * initCondParams, void *
                 for(int k = 2; k < nz+2; ++k) {
                     fscanf(fileIn, "%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n", &x, &y, &z, &e_in, &p_in, &ut_in, &ux_in, &uy_in, &un_in, &pitt_in, &pitx_in, &pity_in, &pitn_in, &pixx_in, &pixy_in, &pixn_in, &piyy_in, &piyn_in, &pinn_in, &Pi_in);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
-                    e[s] =  (PRECISION) e_in;
+                    e[s] =  (PRECISION) e_in + (PRECISION)1.0e-3;
                     //ep[s] = (PRECISION) e_in; //set previous step to same value
                     p[s] = p_in;
                     u->ut[s] = ut_in;
@@ -121,7 +121,10 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                 for(int k = 2; k < nz+2; ++k) {
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
-                    e[s] =  (PRECISION) value;
+                    e[s] =  (PRECISION) value + (PRECISION)1.0e-3;
+
+                    //set the pressure based on EOS rather than reading from file
+                    p[s] = equilibriumPressure(e[s]);
                     //ep[s] = (PRECISION) value;
                     //printf("e [ %d ] = %f\n", s, e[s]);
                 }
@@ -131,6 +134,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
     fclose(fileIn);
 
     //pressure
+    /*
     sprintf(fname, "%s/%s", rootDirectory, "/input/p.dat");
     fileIn = fopen(fname, "r");
     if (fileIn == NULL)
@@ -150,7 +154,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
         }
     }
     fclose(fileIn);
-
+    */
     //ut
     sprintf(fname, "%s/%s", rootDirectory, "/input/ut.dat");
     fileIn = fopen(fname, "r");
@@ -255,6 +259,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->pitt[s] =  (PRECISION) value;
+                    //q->pitt[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -276,6 +281,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->pitx[s] =  (PRECISION) value;
+                    //q->pitx[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -297,6 +303,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->pity[s] =  (PRECISION) value;
+                    //q->pity[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -318,6 +325,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->pitn[s] =  (PRECISION) value;
+                    //q->pitn[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -339,6 +347,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->pixx[s] =  (PRECISION) value;
+                    //q->pixx[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -360,6 +369,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->pixy[s] =  (PRECISION) value;
+                    //q->pixy[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -381,6 +391,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->pixn[s] =  (PRECISION) value;
+                    //q->pitn[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -402,6 +413,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->piyy[s] =  (PRECISION) value;
+                    //q->piyy[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -423,6 +435,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->piyn[s] =  (PRECISION) value;
+                    //q->piyn[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -444,6 +457,7 @@ void setInitialTmunuFromFiles(void * latticeParams, void * initCondParams, void 
                     fscanf(fileIn, "%f %f %f %f\n", &x, &y, &z, &value);
                     int s = columnMajorLinearIndex(i, j, k, nx+4, ny+4);
                     q->pinn[s] =  (PRECISION) value;
+                    //q->pinn[s] =  (PRECISION) 0.0;
                 }
             }
         }
@@ -753,9 +767,9 @@ void setGlauberInitialCondition(void * latticeParams, void * initCondParams) {
 	double dz = lattice->latticeSpacingRapidity;
 
 	double e0 = initCond->initialEnergyDensity;
-	double T0 = 3.05;
+	//double T0 = 3.05;
 //	e0 *= pow(T0,4);
-	e0 = (double) equilibriumEnergyDensity(T0);
+	//e0 = (double) equilibriumEnergyDensity(T0);
 
 	double eT[nx*ny], eL[nz];
 	energyDensityTransverseProfileAA(eT, nx, ny, dx, dy, initCondParams);
@@ -792,9 +806,9 @@ void setMCGlauberInitialCondition(void * latticeParams, void * initCondParams) {
 
 	double e0 = initCond->initialEnergyDensity;
 //	double T0 = 3.05;
-	double T0 = 2.03;
+	//double T0 = 2.03;
 //	e0 *= pow(T0,4);
-	e0 = (double) equilibriumEnergyDensity(T0);
+	//e0 = (double) equilibriumEnergyDensity(T0);
 
 	double eT[nx*ny], eL[nz];
 	monteCarloGlauberEnergyDensityTransverseProfile(eT, nx, ny, dx, dy, initCondParams);

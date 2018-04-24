@@ -62,11 +62,11 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		PRECISION e_s = e[s];
 		PRECISION p_s = p[s];
 
-		//PRECISION xi0 = 0.1f;
-		//PRECISION rhomax = 1.0f;
-
-		PRECISION xi0 = 1.0;
-		PRECISION rhomax = 10.0;
+		//xi0 controls regulation of tracelessness condition, according to iEBE best chosen to be 0.1 
+		PRECISION xi0 = 0.1;
+		//rhomax best chosen to be in ( 1.0, 10.0) according to iEBE paper ; smaller rhomax -> stronger shear regulation
+		//rhomax controls inv reynolds number
+		PRECISION rhomax = 1.0;
 
 		PRECISION t2 = t*t;
 
@@ -117,16 +117,17 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 		//regulate the bulk pressure according to it's inverse reynolds #
 		#ifdef REGULATE_BULK
 		PRECISION rhoBulk = abs(Pi) / sqrtf(e_s * e_s + 3 * p_s * p_s);
+		//PRECISION rhoBulk = abs(Pi) / p_s;
 		if(isnan(rhoBulk) == 1) printf("found rhoBulk Nan\n");
-    PRECISION facBulk = tanh(rhoBulk) / rhoBulk;
-    if(fabs(rhoBulk) < 1.e-7) facBulk = 1.0;
-    if(isnan(facBulk) == 1) printf("found facBulk Nan\n");
+		PRECISION facBulk = tanh(rhoBulk) / rhoBulk;
+		if(fabs(rhoBulk) < 1.e-7) facBulk = 1.0;
+		if(isnan(facBulk) == 1) printf("found facBulk Nan\n");
 
 		//regulate bulk pressure
 		#ifdef PI
 		currentVars->Pi[s] *= facBulk;
-		#endif PI
-		#endif REGULATE_BULK
+		#endif
+		#endif
 
 		validityDomain->regulations[s] = fac;
 	}

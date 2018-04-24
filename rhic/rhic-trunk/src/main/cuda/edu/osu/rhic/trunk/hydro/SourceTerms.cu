@@ -20,7 +20,11 @@
 #include "edu/osu/rhic/trunk/eos/EquationOfState.cuh" // for bulk terms
 #include "edu/osu/rhic/trunk/hydro/TransportCoefficients.cuh"
 
+#include "edu/osu/rhic/core/muscl/FluxLimiter.cuh"
+
 //#define USE_CARTESIAN_COORDINATES
+
+#define MINMOD_FOR_U_AND_P //use approximate derivative with minmod flux limiter for derivatives of flow and pressure
 
 __device__
 void setPimunuSourceTerms(PRECISION * const __restrict__ pimunuRHS,
@@ -109,7 +113,7 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	PRECISION wxy = (dyux - dxuy) / 2 + (uy * dux - ux * duy) / 2;
 	PRECISION wxn = (dnux - t2 * dxun) / 2 + (t2 * un * dux - ux * Dun) / 2;
 	PRECISION wyn = (dnuy - t2 * dyun) / 2 + (t2 * un * duy - uy * Dun) / 2;
-	// anti-symmetric vorticity components 
+	// anti-symmetric vorticity components
 	PRECISION wxt = wtx;
 	PRECISION wyt = wty;
 	PRECISION wnt = wtn / t2;
@@ -295,7 +299,7 @@ void loadSourceTerms(const PRECISION * const __restrict__ I, const PRECISION * c
 		PRECISION utp, PRECISION uxp, PRECISION uyp, PRECISION unp,
 		PRECISION t, PRECISION e, const PRECISION * const __restrict__ pvec, int s) {
 	//=========================================================
-	// conserved variables	
+	// conserved variables
 	//=========================================================
 	PRECISION ttt = Q[0];
 	PRECISION ttx = Q[1];
@@ -468,7 +472,7 @@ void loadSourceTerms(const PRECISION * const __restrict__ I, const PRECISION * c
 			dnut, dxux, dyux, dnux, dxuy, dyuy, dnuy, dxun, dyun, dnun, dkvk);
 	for (unsigned int n = 0; n < NUMBER_DISSIPATIVE_CURRENTS; ++n)
 		S[n + 4] = pimunuRHS[n];
-#endif		
+#endif
 }
 /***************************************************************************************************************************************************/
 
@@ -604,7 +608,7 @@ PRECISION * const __restrict__ S, const FLUID_VELOCITY * const __restrict__ u,
 PRECISION utp, PRECISION uxp, PRECISION uyp, PRECISION unp,
 PRECISION t, PRECISION e, const PRECISION * const __restrict__ pvec, int s) {
 	//=========================================================
-	// conserved variables	
+	// conserved variables
 	//=========================================================
 	PRECISION ttt = Q[0];
 	PRECISION ttx = Q[1];
@@ -647,11 +651,13 @@ PRECISION t, PRECISION e, const PRECISION * const __restrict__ pvec, int s) {
 	PRECISION *uyvec = u->uy;
 	PRECISION *unvec = u->un;
 
-	PRECISION p = pvec[s];
+	PRECISION p =  pvec[s];
 	PRECISION ut = utvec[s];
 	PRECISION ux = uxvec[s];
 	PRECISION uy = uyvec[s];
 	PRECISION un = unvec[s];
+
+	int stride = d_ncx * d_ncy;
 
 	//=========================================================
 	// spatial derivatives of primary variables
@@ -659,26 +665,96 @@ PRECISION t, PRECISION e, const PRECISION * const __restrict__ pvec, int s) {
 	PRECISION facX = 1 / d_dx / 2;
 	PRECISION facY = 1 / d_dy / 2;
 	PRECISION facZ = 1 / d_dz / 2;
+
+	#ifndef MINMOD_FOR_U_AND_P
+	//use central finite difference
+
 	// dx of u^{\mu} components
 	PRECISION dxut = (*(utvec + s + 1) - *(utvec + s - 1)) * facX;
 	PRECISION dxux = (*(uxvec + s + 1) - *(uxvec + s - 1)) * facX;
 	PRECISION dxuy = (*(uyvec + s + 1) - *(uyvec + s - 1)) * facX;
 	PRECISION dxun = (*(unvec + s + 1) - *(unvec + s - 1)) * facX;
+
 	// dy of u^{\mu} components
 	PRECISION dyut = (*(utvec + s + d_ncx) - *(utvec + s - d_ncx)) * facY;
 	PRECISION dyux = (*(uxvec + s + d_ncx) - *(uxvec + s - d_ncx)) * facY;
 	PRECISION dyuy = (*(uyvec + s + d_ncx) - *(uyvec + s - d_ncx)) * facY;
 	PRECISION dyun = (*(unvec + s + d_ncx) - *(unvec + s - d_ncx)) * facY;
+
 	// dn of u^{\mu} components
-	int stride = d_ncx * d_ncy;
 	PRECISION dnut = (*(utvec + s + stride) - *(utvec + s - stride)) * facZ;
 	PRECISION dnux = (*(uxvec + s + stride) - *(uxvec + s - stride)) * facZ;
 	PRECISION dnuy = (*(uyvec + s + stride) - *(uyvec + s - stride)) * facZ;
 	PRECISION dnun = (*(unvec + s + stride) - *(unvec + s - stride)) * facZ;
+
 	// pressure
 	PRECISION dxp = (*(pvec + s + 1) - *(pvec + s - 1)) * facX;
 	PRECISION dyp = (*(pvec + s + d_ncx) - *(pvec + s - d_ncx)) * facY;
 	PRECISION dnp = (*(pvec + s + stride) - *(pvec + s - stride)) * facZ;
+
+	#else
+	//use minmod flux limiter to dampen oscillations in u and p
+
+	PRECISION p_right =  pvec[s+1];
+	PRECISION ut_right = utvec[s+1];
+	PRECISION ux_right = uxvec[s+1];
+	PRECISION uy_right = uyvec[s+1];
+	PRECISION un_right = unvec[s+1];
+
+	PRECISION p_left =  pvec[s-1];
+	PRECISION ut_left = utvec[s-1];
+	PRECISION ux_left = uxvec[s-1];
+	PRECISION uy_left = uyvec[s-1];
+	PRECISION un_left = unvec[s-1];
+
+	PRECISION p_top =  pvec[s+d_ncx];
+	PRECISION ut_top = utvec[s+d_ncx];
+	PRECISION ux_top = uxvec[s+d_ncx];
+	PRECISION uy_top = uyvec[s+d_ncx];
+	PRECISION un_top = unvec[s+d_ncx];
+
+	PRECISION p_bottom =  pvec[s-d_ncx];
+	PRECISION ut_bottom = utvec[s-d_ncx];
+	PRECISION ux_bottom = uxvec[s-d_ncx];
+	PRECISION uy_bottom = uyvec[s-d_ncx];
+	PRECISION un_bottom = unvec[s-d_ncx];
+
+	PRECISION p_forward =  pvec[s+stride];
+	PRECISION ut_forward = utvec[s+stride];
+	PRECISION ux_forward = uxvec[s+stride];
+	PRECISION uy_forward = uyvec[s+stride];
+	PRECISION un_forward = unvec[s+stride];
+
+	PRECISION p_backward =  pvec[s-stride];
+	PRECISION ut_backward = utvec[s-stride];
+	PRECISION ux_backward = uxvec[s-stride];
+	PRECISION uy_backward = uyvec[s-stride];
+	PRECISION un_backward = unvec[s-stride];
+
+	// dx of u^{\mu} components
+	PRECISION dxut = approximateDerivative(ut_left, ut, ut_right) / d_dx;
+	PRECISION dxux = approximateDerivative(ux_left, ux, ux_right) / d_dx;
+	PRECISION dxuy = approximateDerivative(uy_left, uy, uy_right) / d_dx;
+	PRECISION dxun = approximateDerivative(un_left, un, un_right) / d_dx;
+
+	// dy of u^{\mu} components
+	PRECISION dyut = approximateDerivative(ut_bottom, ut, ut_top) / d_dy;
+	PRECISION dyux = approximateDerivative(ux_bottom, ux, ux_top) / d_dy;
+	PRECISION dyuy = approximateDerivative(uy_bottom, uy, uy_top) / d_dy;
+	PRECISION dyun = approximateDerivative(un_bottom, un, un_top) / d_dy;
+
+	//dn of u^{\mu} components
+	PRECISION dnut = approximateDerivative(ut_backward, ut, ut_forward) / d_dz;
+	PRECISION dnux = approximateDerivative(ux_backward, ux, ux_forward) / d_dz;
+	PRECISION dnuy = approximateDerivative(uy_backward, uy, uy_forward) / d_dz;
+	PRECISION dnun = approximateDerivative(un_backward, un, un_forward) / d_dz;
+
+	// pressure
+	PRECISION dxp = approximateDerivative(p_left, p, p_right) / d_dx;
+	PRECISION dyp = approximateDerivative(p_bottom, p, p_top) / d_dy;
+	PRECISION dnp = approximateDerivative(p_backward, p, p_forward) / d_dz;
+	#endif
+
 
 	//=========================================================
 	// T^{\mu\nu} source terms
@@ -711,6 +787,5 @@ PRECISION t, PRECISION e, const PRECISION * const __restrict__ pvec, int s) {
 			dnut, dxux, dyux, dnux, dxuy, dyuy, dnuy, dxun, dyun, dnun, dkvk);
 	for (unsigned int n = 0; n < NUMBER_DISSIPATIVE_CURRENTS; ++n)
 		S[n + 4] = pimunuRHS[n];
-#endif		
+#endif
 }
-

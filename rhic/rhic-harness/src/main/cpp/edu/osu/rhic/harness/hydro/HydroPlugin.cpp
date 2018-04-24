@@ -37,7 +37,7 @@
 #include "edu/osu/rhic/trunk/hydro/HydrodynamicValidity.cuh"
 
 #define FREQ 10
-#define FOFREQ 10 //call freezeout surface finder every FOFREQ timesteps
+#define FOFREQ 50 //call freezeout surface finder every FOFREQ timesteps
 #define FOTEST 0 //if true, freezeout surface file is written with proper times rounded (down) to step size
 #define FOFORMAT 0 // 0 : write f.o. surface to ASCII file ;  1 : write to binary file
 
