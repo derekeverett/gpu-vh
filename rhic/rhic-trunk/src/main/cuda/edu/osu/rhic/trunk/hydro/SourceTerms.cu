@@ -105,14 +105,27 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	PRECISION snn = -ut * (1 + 2 * t2 * un2) / t3 - dnun / t2 - un * dun + (1 / t2 + un2) * theta3;
 
 	/*********************************************************\
-	 * vorticity tensor
-	 /*********************************************************/
+	 * vorticity tensor w^\mu _\nu
+	/*********************************************************/
+
+	//Original expressions were inconsistent with DNMR and Eqns of Motion up to signs and factors of 1/2
+	/*
 	PRECISION wtx = (dtux + dxut) / 2 + (ux * dut - ut * dux) / 2 + t * un2 * ux / 2;
 	PRECISION wty = (dtuy + dyut) / 2 + (uy * dut - ut * duy) / 2 + t * un2 * uy / 2;
-	PRECISION wtn = (t2 * dtun + 2 * t * un + dnut) / 2 + (t2 * un * dut - ut * Dun) + t3 * un * un2 / 2;
+	PRECISION wtn = (t2 * dtun + 2 * t * un + dnut) / 2 + (t2 * un * dut - ut * Dun) + t3 * un*un2 / 2;
 	PRECISION wxy = (dyux - dxuy) / 2 + (uy * dux - ux * duy) / 2;
 	PRECISION wxn = (dnux - t2 * dxun) / 2 + (t2 * un * dux - ux * Dun) / 2;
 	PRECISION wyn = (dnuy - t2 * dyun) / 2 + (t2 * un * duy - uy * Dun) / 2;
+	*/
+
+	//these expressions verified by McNelis and Du
+	PRECISION wtx = (-dtux  -  dxut  +  ut * dux  -  ux * dut  -  t * un2 * ux) / 2.0;
+	PRECISION wty = (-dtuy  -  dyut  +  ut * duy  -  uy * dut  -  t * un2 * uy) / 2.0;
+	PRECISION wtn = (-t2 * dtun  -  2.0 * t * un  - dnut  -  ut * Dun  - t2 * un * dut  -  t3 * un * un2) / 2.0;
+	PRECISION wxy = (dxuy  -  dyux  +  ux * duy  -  uy * dux) / 2.0;
+	PRECISION wxn = (t2 * dxun  -  dnux  -  ux * Dun  -  t2 * un * dux) / 2.0;
+	PRECISION wyn = (t2 * dyun  -  dnuy  -  uy * Dun  -  t2 * un * duy) / 2.0;
+
 	// anti-symmetric vorticity components
 	PRECISION wxt = wtx;
 	PRECISION wyt = wty;
