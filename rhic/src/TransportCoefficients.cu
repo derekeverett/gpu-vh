@@ -5,10 +5,8 @@
  *      Author: bazow
  */
 
-//see arXiv:1608.06577v1 p.8 for details 
-
-#include "edu/osu/rhic/trunk/hydro/TransportCoefficients.cuh"
-#include "edu/osu/rhic/trunk/eos/EquationOfState.cuh" // for bulk terms
+#include "../include/TransportCoefficients.cuh"
+#include "../include/EquationOfState.cuh" // for bulk terms
 
 // paramters for the analytic parameterization of the bulk viscosity \zeta/S
 #define A_1 -13.77
@@ -27,7 +25,8 @@
 
 // TODO: Eliminate branching.
 __device__ PRECISION bulkViscosityToEntropyDensity(PRECISION T) {
-	PRECISION x = T / 1.01355;
+	PRECISION x = T / 1.01355; //peak bulk pressure near (unphysical) T = 200 MeV
+	//PRECISION x = T / 0.785498; //peak bulk pressure at physical temperature  T = 155 MeV
 	if (x > 1.05)
 		return LAMBDA_1 * exp(-(x - 1) / SIGMA_1) + LAMBDA_2 * exp(-(x - 1) / SIGMA_2) + 0.001;
 	else if (x < 0.995)

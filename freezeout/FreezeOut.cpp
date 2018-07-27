@@ -1,4 +1,4 @@
-#include "edu/osu/rhic/trunk/hydro/DynamicalVariables.cuh"
+#include "../rhic/include/DynamicalVariables.cuh"
 
 //return a 4 dimensional linear interpolation inside the hypercube, given the values
 //on the corners (a0000 through a1111) and edge lengths x0 through x3
@@ -94,7 +94,7 @@ void swapAndSetHydroVariables(double ****energy_density_evoution, double *****hy
         hydrodynamic_evoution[12][1][ix-2][iy-2][iz-2] = (double)(q->piyy[s]);
         hydrodynamic_evoution[13][1][ix-2][iy-2][iz-2] = (double)(q->piyn[s]);
         hydrodynamic_evoution[14][1][ix-2][iy-2][iz-2] = (double)(q->pinn[s]);
-	#endif 
+	#endif
 	#ifdef PI
         hydrodynamic_evoution[15][1][ix-2][iy-2][iz-2] = (double)(q->Pi[s]);
 	#endif
