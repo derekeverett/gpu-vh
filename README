@@ -1,10 +1,10 @@
-# cpu-vh
-cpu-vh is a code designed for the hydrodynamic simulation of heavy ion collisions.
+# gpu-vh
+gpu-vh is a code designed for the hydrodynamic simulation of heavy ion collisions.
 Please see arXiv:1608.06577 for a description of the physics, as well as the KT algorithm which
 is used to solve the hydrodynamic equations of motion.
 This code is the GPU version of the algorithm described in this paper, and has been further optimized.
 
-The up to date GPU version of this code can be found at https://github.com/derekeverett/gpu-vh
+The up to date CPU version of this code can be found at https://github.com/derekeverett/cpu-vh
 The two codes are designed to be as similar as possible, with the flexibility of running on heterogeneous computing platforms.
 
 #Installation
@@ -15,14 +15,12 @@ $cmake ..
 $make
 $make install
 
-There should now exist an executable cpu-vh in the parent directory.
+There should now exist an executable gpu-vh in the parent directory.
 
 #Usage
 
 To run the code:
-$sh run.sh NUMTHREADS
-
-where NUMTHREADS is the number of cores on which to run the code in parallel.
+$sh run.sh
 
 All parameters can be set in the files inside the 'rhic-conf' directory.
 
@@ -40,6 +38,6 @@ The configuration files for the different test problems are located in rhic/rhic
 There is a flag in EquationOfState.cuh that allows you to switch between an ideal and QCD EoS.
 The flux limiter parameter can be changed based on smooth or fluctuating initial conditions and is set in FluxLimiter.cu.
 
-The freezeout surface file 'surface.dat' is written to the directory '/output', so this directory must exist when running cpu-vh.
+The freezeout surface file 'surface.dat' is written to the directory '/output', so this directory must exist when running gpu-vh.
 The freezeout file is written in a format readable by the Cooper Frye and Sampling Code iS3D : https://github.com/derekeverett/iS3D
 The input files are read from the '/input' directory.
