@@ -1,0 +1,6 @@
+output
+build
+*.o
+*.out
+.DS_Store
+tags
