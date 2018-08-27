@@ -5,7 +5,7 @@
  *      Author: bazow
  */
 #include <math.h> // for math functions
-
+#include <stdio.h>
 #include "../include/EnergyMomentumTensor.cuh"
 #include "../include/DynamicalVariables.cuh"
 #include "../include/LatticeParameters.h"

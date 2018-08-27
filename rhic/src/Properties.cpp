@@ -6,7 +6,7 @@
  */
 
 #include "../include/Properties.h"
-
+/*
 void getIntegerProperty(config_t *cfg, const char* propName, int *propValue, int defaultValue) {
 	  if(config_lookup_int(cfg, propName, propValue))
 	    return;
@@ -20,3 +20,4 @@ void getDoubleProperty(config_t *cfg, const char* propName, double *propValue, d
 	  else
 	    *propValue = defaultValue;
 }
+*/

@@ -5,6 +5,8 @@
  *      Author: bazow
  */
 
+#include <iostream>
+#include <stdio.h>
 #include "../include/GlauberModel.h"
 #include "../include/MonteCarloGlauberModel.h"
 #include "../include/InitialConditionParameters.h"

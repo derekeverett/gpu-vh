@@ -7,12 +7,12 @@ DIR_OBJ        = $(DIR_BUILD)rhic
 DEBUG =
 OPTIMIZATION = -O5 
 FLOWTRACE =
-OPTIONS = --relocatable-device-code=true -use_fast_math #--ptxas-options=-v -lineinfo
-LINK_OPTIONS = --cudart static --relocatable-device-code=true -link -L/home/everett.165/libconfig-1.5/lib/.libs -lconfig -L/home/everett.165/googletest-master/googletest/mybuild/ -lgtest
+OPTIONS = --relocatable-device-code=true -use_fast_math -std=c++11 #--ptxas-options=-v -lineinfo
+LINK_OPTIONS = --cudart static --relocatable-device-code=true -link 
 CFLAGS = $(DEBUG) $(OPTIMIZATION) $(FLOWTRACE) $(OPTIONS)
 COMPILER = nvcc
-LIBS = -lm -lgsl -lgslcblas -lconfig -lgtest
-INCLUDES = -I rhic/include -I /home/everett.165/libconfig-1.5/lib/ -I /home/everett.165/googletest-master/googletest/include/ -I freezeout
+LIBS = -lm -lgsl -lgslcblas
+INCLUDES = -I rhic/include -I freezeout
 
 CPP := $(shell find $(DIR_SRC) -name '*.cpp')
 CU := $(shell find $(DIR_SRC) -name '*.cu')
