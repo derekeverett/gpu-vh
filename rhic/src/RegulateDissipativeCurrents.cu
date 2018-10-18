@@ -8,8 +8,8 @@
 #include "../include/DynamicalVariables.cuh"
 #include "../include/CudaConfiguration.cuh"
 #include "../include/RegulateDissipativeCurrents.cuh"
+#include "../include/EquationOfState.cuh"
 
-//#define REGULATE_BULK
 
 #ifndef IDEAL
 __global__
@@ -17,8 +17,11 @@ void regulateDissipativeCurrents(PRECISION t,
 CONSERVED_VARIABLES * const __restrict__ currentVars,
 const PRECISION * const __restrict__ e, const PRECISION * const __restrict__ p,
 const FLUID_VELOCITY * const __restrict__ u,
-VALIDITY_DOMAIN * const __restrict__ validityDomain
+VALIDITY_DOMAIN * const __restrict__ validityDomain, PRECISION T_reg
 ) {
+	//only cells with Temperature < T_reg have dissipative currents regulated
+	PRECISION e_reg = equilibriumEnergyDensity(T_reg);
+
 	unsigned int threadID = blockDim.x * blockIdx.x + threadIdx.x;
 	if (threadID < d_nElements) {
 		unsigned int k = threadID / (d_nx * d_ny) + N_GHOST_CELLS_M;
@@ -97,39 +100,36 @@ VALIDITY_DOMAIN * const __restrict__ validityDomain
 //*/
 		PRECISION rho = fmaxf(a1,fmaxf(a2,fmaxf(a3,fmaxf(a4,fmaxf(a5,a6)))));
 
-		PRECISION fac = fdividef(tanhf(rho), rho);
-		if(fabsf(rho)<1.e-7) fac = 1;
+		PRECISION facShear = fdividef(tanhf(rho), rho);
+		if(fabsf(rho)<1.e-7) facShear = 1.0;
+
+		//regulate the bulk pressure according to it's inverse reynolds #
+		PRECISION rhoBulk = fabs(Pi) / p[s];
+		PRECISION facBulk = tanh(rhoBulk) / rhoBulk;
+		if (fabs(rhoBulk) < 1.e-7) facBulk = 1.0;
+
+		//ensure that regulation only happens for cells with temperature less than chosen regulation temperature
+		if (e[s] > e_reg) {facShear = 1.0; facBulk = 1.0;}
 
 		//regulate the shear stress
 		#ifdef PIMUNU
-		currentVars->pitt[s] *= fac;
-		currentVars->pitx[s] *= fac;
-		currentVars->pity[s] *= fac;
-		currentVars->pitn[s] *= fac;
-		currentVars->pixx[s] *= fac;
-		currentVars->pixy[s] *= fac;
-		currentVars->pixn[s] *= fac;
-		currentVars->piyy[s] *= fac;
-		currentVars->piyn[s] *= fac;
-		currentVars->pinn[s] *= fac;
+		currentVars->pitt[s] *= facShear;
+		currentVars->pitx[s] *= facShear;
+		currentVars->pity[s] *= facShear;
+		currentVars->pitn[s] *= facShear;
+		currentVars->pixx[s] *= facShear;
+		currentVars->pixy[s] *= facShear;
+		currentVars->pixn[s] *= facShear;
+		currentVars->piyy[s] *= facShear;
+		currentVars->piyn[s] *= facShear;
+		currentVars->pinn[s] *= facShear;
 		#endif
-
-		//regulate the bulk pressure according to it's inverse reynolds #
-		#ifdef REGULATE_BULK
-		PRECISION rhoBulk = abs(Pi) / sqrtf(e_s * e_s + 3 * p_s * p_s);
-		//PRECISION rhoBulk = abs(Pi) / p_s;
-		if(isnan(rhoBulk) == 1) printf("found rhoBulk Nan\n");
-		PRECISION facBulk = tanh(rhoBulk) / rhoBulk;
-		if(fabs(rhoBulk) < 1.e-7) facBulk = 1.0;
-		if(isnan(facBulk) == 1) printf("found facBulk Nan\n");
 
 		//regulate bulk pressure
 		#ifdef PI
 		currentVars->Pi[s] *= facBulk;
 		#endif
-		#endif
-
-		validityDomain->regulations[s] = fac;
+		validityDomain->regulations[s] = facShear;
 	}
 }
 #endif

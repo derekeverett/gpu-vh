@@ -106,58 +106,34 @@ void convexCombinationEulerStepKernel(const CONSERVED_VARIABLES * const __restri
 #ifndef IDEAL
 #define REGULATE_DISSIPATIVE_CURRENTS
 #endif
-void twoStepRungeKutta(PRECISION t, PRECISION dt, CONSERVED_VARIABLES * __restrict__ d_q, CONSERVED_VARIABLES * __restrict__ d_Q) {
+void twoStepRungeKutta(PRECISION t, PRECISION dt, CONSERVED_VARIABLES * __restrict__ d_q, CONSERVED_VARIABLES * __restrict__ d_Q, PRECISION T_reg) {
 
 	#ifdef REGULATE_DISSIPATIVE_CURRENTS
-		regulateDissipativeCurrents<<<gridSizeReg, blockSizeReg>>>(t, d_qS, d_e, d_p, d_uS, d_validityDomain);
+	regulateDissipativeCurrents<<<gridSizeReg, blockSizeReg>>>(t, d_qS, d_e, d_p, d_uS, d_validityDomain, T_reg);
 	#endif
 
 	//===================================================
 	// Predicted step
 	//===================================================
-	//printf(" \n Euler step (predicted )is starting \n");
 	eulerStep(t, d_q, d_qS, d_e, d_p, d_u, d_up);
-	//printf(" \n Euler step (predicted  has finished \n");
 	t += dt;
-/*
-#ifdef REGULATE_DISSIPATIVE_CURRENTS
-	regulateDissipativeCurrents<<<gridSizeReg, blockSizeReg>>>(t, d_qS, d_e, d_p, d_uS, d_validityDomain);
-#endif
-*/
 	setInferredVariablesKernel<<<gridSizeInferredVars, blockSizeInferredVars>>>(d_qS, d_e, d_p, d_uS, t);
-
-#ifdef REGULATE_DISSIPATIVE_CURRENTS
-	regulateDissipativeCurrents<<<gridSizeReg, blockSizeReg>>>(t, d_qS, d_e, d_p, d_uS, d_validityDomain);
-#endif
-
+	#ifdef REGULATE_DISSIPATIVE_CURRENTS
+	regulateDissipativeCurrents<<<gridSizeReg, blockSizeReg>>>(t, d_qS, d_e, d_p, d_uS, d_validityDomain, T_reg);
+	#endif
 	setGhostCells(d_qS, d_e, d_p, d_uS);
 
 	//===================================================
 	// Corrected step
 	//===================================================
-
-	//printf(" \n Euler step corrected is starting \n");
 	eulerStep(t, d_qS, d_Q, d_e, d_p, d_uS, d_u);
-	//printf(" \n Euler step corrected is starting \n");
-
 	convexCombinationEulerStepKernel<<<gridSizeConvexComb, blockSizeConvexComb>>>(d_q, d_Q);
-
 	swapFluidVelocity(&d_up, &d_u);
-
-//#ifdef REGULATE_DISSIPATIVE_CURRENTS
-	//regulateDissipativeCurrents<<<gridSizeReg, blockSizeReg>>>(t, d_qS, d_e, d_p, d_uS, d_validityDomain);
-//#endif
-
 	setInferredVariablesKernel<<<gridSizeInferredVars, blockSizeInferredVars>>>(d_Q, d_e, d_p, d_u, t);
-
-#ifdef REGULATE_DISSIPATIVE_CURRENTS
-	regulateDissipativeCurrents<<<gridSizeReg, blockSizeReg>>>(t, d_Q, d_e, d_p, d_u, d_validityDomain);
-#endif
-
+	#ifdef REGULATE_DISSIPATIVE_CURRENTS
+	regulateDissipativeCurrents<<<gridSizeReg, blockSizeReg>>>(t, d_Q, d_e, d_p, d_u, d_validityDomain, T_reg);
+	#endif
 	setGhostCells(d_Q, d_e, d_p, d_u);
-
-//#ifndef IDEAL
 	checkValidity(t, d_validityDomain, d_q, d_e, d_p, d_u, d_up);
-//#endif
 	cudaDeviceSynchronize();
 }

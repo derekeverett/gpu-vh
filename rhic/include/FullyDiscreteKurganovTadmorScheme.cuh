@@ -17,6 +17,6 @@ void convexCombinationEulerStepKernel(
 
 void twoStepRungeKutta(PRECISION t, PRECISION dt,
 		CONSERVED_VARIABLES * __restrict__ d_q,
-		CONSERVED_VARIABLES * __restrict__ d_Q);
+		CONSERVED_VARIABLES * __restrict__ d_Q, PRECISION T_reg);
 
 #endif /* FULLYDISCRETEKURGANOVTADMORSCHEME_CUH_ */

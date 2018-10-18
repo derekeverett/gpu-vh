@@ -133,6 +133,10 @@ void run(void * latticeParams, void * initCondParams, void * hydroParams, const 
 	const double freezeoutTemperature = freezeoutTemperatureGeV/hbarc;
 	//	const double freezeoutEnergyDensity = e0*pow(freezeoutTemperature,4);
 	const double freezeoutEnergyDensity = equilibriumEnergyDensity(freezeoutTemperature);
+
+	PRECISION regulationTemperatureGeV = (PRECISION)(hydro->regulationTemperatureGeV);
+	PRECISION T_reg = regulationTemperatureGeV / hbarc;
+
 	printf("Grid size = %d x %d x %d\n", nx, ny, nz);
 	printf("spatial resolution = (%.3f, %.3f, %.3f)\n", lattice->latticeSpacingX, lattice->latticeSpacingY, lattice->latticeSpacingRapidity);
 	printf("freezeout temperature = %.3f [fm^-1] (eF = %.3f [fm^-4])\n", freezeoutTemperature, freezeoutEnergyDensity);
@@ -408,7 +412,7 @@ if (accumulator2 >= FOFREQ+1) //only break once freezeout finder has had a chanc
 	break;
 }
 sw.tic();
-twoStepRungeKutta(t, dt, d_q, d_Q);
+twoStepRungeKutta(t, dt, d_q, d_Q, T_reg);
 sw.toc();
 float elapsedTime = sw.elapsedTime();
 if ((n-1) % FREQ == 0) printf("(Elapsed time/step: %.3f ms)\n", elapsedTime);
