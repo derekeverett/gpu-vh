@@ -24,7 +24,7 @@
 
 //#define USE_CARTESIAN_COORDINATES
 
-#define MINMOD_FOR_U_AND_P //use approximate derivative with minmod flux limiter for derivatives of flow and pressure
+#define USE_APPROX_DERIVATIVE //use approximate derivative with minmod flux limiter for derivatives of flow and pressure
 
 __device__
 void setPimunuSourceTerms(PRECISION * const __restrict__ pimunuRHS,
@@ -39,6 +39,7 @@ PRECISION dxut, PRECISION dyut, PRECISION dnut, PRECISION dxux,
 PRECISION dyux, PRECISION dnux,
 PRECISION dxuy, PRECISION dyuy, PRECISION dnuy, PRECISION dxun,
 PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
+	
 	/*********************************************************\
 	 * Temperature dependent shear transport coefficients
 	 /*********************************************************/
@@ -52,7 +53,7 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	PRECISION cs2 = speedOfSoundSquared(e);
 	PRECISION a = 0.333333f - cs2;
 	PRECISION a2 = a * a;
-	PRECISION beta_Pi = 15 * a2 * (e + p);
+	PRECISION beta_Pi = 15.0 * a2 * (e + p);
 	PRECISION lambda_Pipi = 1.6f * a;
 
 	PRECISION zetabar = bulkViscosityToEntropyDensity(T);
@@ -82,7 +83,7 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	PRECISION Duy = -duy;
 
 	PRECISION dun = ut * dtun + ux * dxun + uy * dyun + un * dnun;
-	PRECISION Dun = -t2 * dun - 2 * t * ut * un;
+	PRECISION Dun = -t2 * dun - 2.0 * t * ut * un;
 
 	/*********************************************************\
 	 * expansion rate
@@ -92,17 +93,17 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	/*********************************************************\
 	 * Velocity shear stress tensor
 	 /*********************************************************/
-	PRECISION theta3 = theta / 3;
-	PRECISION stt = -t * ut * un2 + (dtut - ut * dut) + (ut2 - 1) * theta3;
-	PRECISION stx = -(t * un2 * ux) / 2 + (dtux - dxut) / 2 - (ux * dut + ut * dux) / 2 + ut * ux * theta3;
-	PRECISION sty = -(t * un2 * uy) / 2 + (dtuy - dyut) / 2 - (uy * dut + ut * duy) / 2 + ut * uy * theta3;
-	PRECISION stn = -un * (2 * ut2 + t2 * un2) / (2 * t) + (dtun - dnut / t2) / 2 - (un * dut + ut * dun) / 2 + ut * un * theta3;
-	PRECISION sxx = -(dxux + ux * dux) + (1 + ux * ux) * theta3;
-	PRECISION sxy = -(dxuy + dyux) / 2 - (uy * dux + ux * duy) / 2 + ux * uy * theta3;
-	PRECISION sxn = -ut * ux * un / t - (dxun + dnux / t2) / 2 - (un * dux + ux * dun) / 2 + ux * un * theta3;
-	PRECISION syy = -(dyuy + uy * duy) + (1 + uy * uy) * theta3;
-	PRECISION syn = -ut * uy * un / t - (dyun + dnuy / t2) / 2 - (un * duy + uy * dun) / 2 + uy * un * theta3;
-	PRECISION snn = -ut * (1 + 2 * t2 * un2) / t3 - dnun / t2 - un * dun + (1 / t2 + un2) * theta3;
+	PRECISION theta3 = theta / 3.0;
+	PRECISION stt = -t * ut * un2 + (dtut - ut * dut) + (ut2 - 1.0) * theta3;
+	PRECISION stx = -(t * un2 * ux) / 2.0 + (dtux - dxut) / 2.0 - (ux * dut + ut * dux) / 2.0 + ut * ux * theta3;
+	PRECISION sty = -(t * un2 * uy) / 2.0 + (dtuy - dyut) / 2.0 - (uy * dut + ut * duy) / 2.0 + ut * uy * theta3;
+	PRECISION stn = -un * (2.0 * ut2 + t2 * un2) / (2.0 * t) + (dtun - dnut / t2) / 2.0 - (un * dut + ut * dun) / 2.0 + ut * un * theta3;
+	PRECISION sxx = -(dxux + ux * dux) + (1.0 + ux * ux) * theta3;
+	PRECISION sxy = -(dxuy + dyux) / 2.0 - (uy * dux + ux * duy) / 2.0 + ux * uy * theta3;
+	PRECISION sxn = -ut * ux * un / t - (dxun + dnux / t2) / 2.0 - (un * dux + ux * dun) / 2.0 + ux * un * theta3;
+	PRECISION syy = -(dyuy + uy * duy) + (1.0 + uy * uy) * theta3;
+	PRECISION syn = -ut * uy * un / t - (dyun + dnuy / t2) / 2.0 - (un * duy + uy * dun) / 2.0 + uy * un * theta3;
+	PRECISION snn = -ut * (1.0 + 2.0 * t2 * un2) / t3 - dnun / t2 - un * dun + (1.0 / t2 + un2) * theta3;
 
 	/*********************************************************\
 	 * vorticity tensor w^\mu _\nu
@@ -137,16 +138,16 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	/*********************************************************\
 	 * I1
 	 /*********************************************************/
-	PRECISION I1tt = 2 * ut * (pitt * Dut + pitx * Dux + pity * Duy + pitn * Dun);
+	PRECISION I1tt = 2.0 * ut * (pitt * Dut + pitx * Dux + pity * Duy + pitn * Dun);
 	PRECISION I1tx = (pitt * ux + pitx * ut) * Dut + (pitx * ux + pixx * ut) * Dux + (pity * ux + pixy * ut) * Duy + (pitn * ux + pixn * ut) * Dun;
 	PRECISION I1ty = (pitt * uy + pity * ut) * Dut + (pitx * uy + pixy * ut) * Dux + (pity * uy + piyy * ut) * Duy + (pitn * uy + piyn * ut) * Dun;
 	PRECISION I1tn = (pitt * un + pitn * ut) * Dut + (pitx * un + pixn * ut) * Dux + (pity * un + piyn * ut) * Duy + (pitn * un + pinn * ut) * Dun;
-	PRECISION I1xx = 2 * ux * (pitx * Dut + pixx * Dux + pixy * Duy + pixn * Dun);
+	PRECISION I1xx = 2.0 * ux * (pitx * Dut + pixx * Dux + pixy * Duy + pixn * Dun);
 	PRECISION I1xy = (pitx * uy + pity * ux) * Dut + (pixx * uy + pixy * ux) * Dux + (pixy * uy + piyy * ux) * Duy + (pixn * uy + piyn * ux) * Dun;
 	PRECISION I1xn = (pitx * un + pitn * ux) * Dut + (pixx * un + pixn * ux) * Dux + (pixy * un + piyn * ux) * Duy + (pixn * un + pinn * ux) * Dun;
-	PRECISION I1yy = 2 * uy * (pity * Dut + pixy * Dux + piyy * Duy + piyn * Dun);
+	PRECISION I1yy = 2.0 * uy * (pity * Dut + pixy * Dux + piyy * Duy + piyn * Dun);
 	PRECISION I1yn = (pity * un + pitn * uy) * Dut + (pixy * un + pixn * uy) * Dux + (piyy * un + piyn * uy) * Duy + (piyn * un + pinn * uy) * Dun;
-	PRECISION I1nn = 2 * un * (pitn * Dut + pixn * Dux + piyn * Duy + pinn * Dun);
+	PRECISION I1nn = 2.0 * un * (pitn * Dut + pixn * Dux + piyn * Duy + pinn * Dun);
 
 	/*********************************************************\
 	 * I2
@@ -165,72 +166,45 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	/*********************************************************\
 	 * I3
 	 /*********************************************************/
-	PRECISION I3tt = 2 * (pitx * wtx + pity * wty + pitn * wtn);
+	PRECISION I3tt = 2.0 * (pitx * wtx + pity * wty + pitn * wtn);
 	PRECISION I3tx = pitt * wxt + pity * wxy + pitn * wxn + pixx * wtx + pixy * wty + pixn * wtn;
 	PRECISION I3ty = pitt * wyt + pitx * wyx + pitn * wyn + pixy * wtx + piyy * wty + piyn * wtn;
 	PRECISION I3tn = pitt * wnt + pitx * wnx + pity * wny + pixn * wtx + piyn * wty + pinn * wtn;
-	PRECISION I3xx = 2 * (pitx * wxt + pixy * wxy + pixn * wxn);
+	PRECISION I3xx = 2.0 * (pitx * wxt + pixy * wxy + pixn * wxn);
 	PRECISION I3xy = pitx * wyt + pity * wxt + pixx * wyx + piyy * wxy + pixn * wyn + piyn * wxn;
 	PRECISION I3xn = pitx * wnt + pitn * wxt + pixx * wnx + pixy * wny + piyn * wxy + pinn * wxn;
-	PRECISION I3yy = 2 * (pity * wyt + pixy * wyx + piyn * wyn);
+	PRECISION I3yy = 2.0 * (pity * wyt + pixy * wyx + piyn * wyn);
 	PRECISION I3yn = pity * wnt + pitn * wyt + pixy * wnx + pixn * wyx + piyy * wny + pinn * wyn;
-	PRECISION I3nn = 2 * (pitn * wnt + pixn * wnx + piyn * wny);
+	PRECISION I3nn = 2.0 * (pitn * wnt + pixn * wnx + piyn * wny);
 
 	/*********************************************************\
 	 * I4
 	 /*********************************************************/
 	PRECISION ux2 = ux * ux;
 	PRECISION uy2 = uy * uy;
-	PRECISION ps = pitt * stt - 2 * pitx * stx - 2 * pity * sty + pixx * sxx + 2 * pixy * sxy + piyy * syy - 2 * pitn * stn * t2 + 2 * pixn * sxn * t2
-			+ 2 * piyn * syn * t2 + pinn * snn * t2 * t2;
-	PRECISION ps3 = ps / 3;
+	PRECISION ps = pitt * stt - 2.0 * pitx * stx - 2.0 * pity * sty + pixx * sxx + 2.0 * pixy * sxy + piyy * syy - 2.0 * pitn * stn * t2 + 2.0 * pixn * sxn * t2
+			+ 2.0 * piyn * syn * t2 + pinn * snn * t2 * t2;
+	PRECISION ps3 = ps / 3.0;
 	PRECISION I4tt = (pitt * stt - pitx * stx - pity * sty - t2 * pitn * stn) - (1 - ut2) * ps3;
-	PRECISION I4tx = (pitt * stx + pitx * stt) / 2 - (pitx * sxx + pixx * stx) / 2 - (pity * sxy + pixy * sty) / 2 - t2 * (pitn * sxn + pixn * stn) / 2
+	PRECISION I4tx = (pitt * stx + pitx * stt) / 2.0 - (pitx * sxx + pixx * stx) / 2.0 - (pity * sxy + pixy * sty) / 2.0 - t2 * (pitn * sxn + pixn * stn) / 2.0
 			+ (ut * ux) * ps3;
-	PRECISION I4ty = (pitt * sty + pity * stt) / 2 - (pitx * sxy + pixy * stx) / 2 - (pity * syy + piyy * sty) / 2 - t2 * (pitn * syn + piyn * stn) / 2
+	PRECISION I4ty = (pitt * sty + pity * stt) / 2.0 - (pitx * sxy + pixy * stx) / 2.0 - (pity * syy + piyy * sty) / 2.0 - t2 * (pitn * syn + piyn * stn) / 2.0
 			+ (ut * uy) * ps3;
-	PRECISION I4tn = (pitt * stn + pitn * stt) / 2 - (pitx * sxn + pixn * stx) / 2 - (pity * syn + piyn * sty) / 2 - t2 * (pitn * snn + pinn * stn) / 2
+	PRECISION I4tn = (pitt * stn + pitn * stt) / 2.0 - (pitx * sxn + pixn * stx) / 2.0 - (pity * syn + piyn * sty) / 2.0 - t2 * (pitn * snn + pinn * stn) / 2.0
 			+ (ut * un) * ps3;
-	PRECISION I4xx = (pitx * stx - pixx * sxx - pixy * sxy - t2 * pixn * sxn) + (1 + ux2) * ps3;
-	PRECISION I4xy = (pitx * sty + pity * stx) / 2 - (pixx * sxy + pixy * sxx) / 2 - (pixy * syy + piyy * sxy) / 2 - t2 * (pixn * syn + piyn * sxn) / 2
+	PRECISION I4xx = (pitx * stx - pixx * sxx - pixy * sxy - t2 * pixn * sxn) + (1.0 + ux2) * ps3;
+	PRECISION I4xy = (pitx * sty + pity * stx) / 2.0 - (pixx * sxy + pixy * sxx) / 2.0 - (pixy * syy + piyy * sxy) / 2.0 - t2 * (pixn * syn + piyn * sxn) / 2.0
 			+ (ux * uy) * ps3;
-	PRECISION I4xn = (pitx * stn + pitn * stx) / 2 - (pixx * sxn + pixn * sxx) / 2 - (pixy * syn + piyn * sxy) / 2 - t2 * (pixn * snn + pinn * sxn) / 2
+	PRECISION I4xn = (pitx * stn + pitn * stx) / 2.0 - (pixx * sxn + pixn * sxx) / 2.0 - (pixy * syn + piyn * sxy) / 2.0 - t2 * (pixn * snn + pinn * sxn) / 2.0
 			+ (ux * un) * ps3;
-	PRECISION I4yy = (pity * sty - pixy * sxy - piyy * syy - t2 * piyn * syn) + (1 + uy2) * ps3;
-	PRECISION I4yn = (pity * stn + pitn * sty) / 2 - (pixy * sxn + pixn * sxy) / 2 - (piyy * syn + piyn * syy) / 2 - t2 * (piyn * snn + pinn * syn) / 2
+	PRECISION I4yy = (pity * sty - pixy * sxy - piyy * syy - t2 * piyn * syn) + (1.0 + uy2) * ps3;
+	PRECISION I4yn = (pity * stn + pitn * sty) / 2.0 - (pixy * sxn + pixn * sxy) / 2.0 - (piyy * syn + piyn * syy) / 2.0 - t2 * (piyn * snn + pinn * syn) / 2.0
 			+ (uy * un) * ps3;
-	PRECISION I4nn = (pitn * stn - pixn * sxn - piyn * syn - t2 * pinn * snn) + (1 / t2 + un2) * ps3;
+	PRECISION I4nn = (pitn * stn - pixn * sxn - piyn * syn - t2 * pinn * snn) + (1.0 / t2 + un2) * ps3;
 
 	/*********************************************************\
 	 * I
 	 /*********************************************************/
-//	PRECISION ps = 0;
-	/*
-	 //	PRECISION ps = pitt*stt + 2*(pixy*sxy - pitx*stx - pity*sty + (pixn*sxn + piyn*syn - pitn*stn)*t2) + pixx*sxx + piyy*syy + pinn*snn*t2*t2;
-	 PRECISION ps = pitt*stt-2*pitx*stx-2*pity*sty+pixx*sxx+2*pixy*sxy+piyy*syy-2*pitn*stn*t2+2*pixn*sxn*t2+2*piyn*syn*t2+pinn*snn*t2*t2;
-	 PRECISION I4tt = 0;
-	 PRECISION I4tx = 0;
-	 PRECISION I4ty = 0;
-	 PRECISION I4tn = 0;
-	 PRECISION I4xx = 0;
-	 PRECISION I4xy = 0;
-	 PRECISION I4xn = 0;
-	 PRECISION I4yy = 0;
-	 PRECISION I4yn = 0;
-	 PRECISION I4nn = 0;
-	 //*/
-	/*
-	 PRECISION I3tt = 0;
-	 PRECISION I3tx = 0;
-	 PRECISION I3ty = 0;
-	 PRECISION I3tn = 0;
-	 PRECISION I3xx = 0;
-	 PRECISION I3xy = 0;
-	 PRECISION I3xn = 0;
-	 PRECISION I3yy = 0;
-	 PRECISION I3yn = 0;
-	 PRECISION I3nn = 0;
-	 //*/
 
 	PRECISION Itt = I1tt + delta_pipi * I2tt - I3tt + tau_pipi * I4tt - lambda_piPi * Pi * stt;
 	PRECISION Itx = I1tx + delta_pipi * I2tx - I3tx + tau_pipi * I4tx - lambda_piPi * Pi * stx;
@@ -246,40 +220,17 @@ PRECISION dyun, PRECISION dnun, PRECISION dkvk) {
 	/*********************************************************\
 	 * shear stress tensor source terms, i.e. terms on RHS
 	 /*********************************************************/
-/*
-	Itt = I1tt;
-	Itx = I1tx;
-	Ity = I1ty;
-	Itn = I1tn;
-	Ixx = I1xx;
-	Ixy = I1xy;
-	Ixn = I1xn;
-	Iyy = I1yy;
-	Iyn = I1yn;
-	Inn = I1nn;
-//*/
-	Itt = I1tt + delta_pipi * I2tt + tau_pipi * I4tt;
-	Itx = I1tx + delta_pipi * I2tx + tau_pipi * I4tx;
-	Ity = I1ty + delta_pipi * I2ty + tau_pipi * I4ty;
-	Itn = I1tn + delta_pipi * I2tn + tau_pipi * I4tn;
-	Ixx = I1xx + delta_pipi * I2xx + tau_pipi * I4xx;
-	Ixy = I1xy + delta_pipi * I2xy + tau_pipi * I4xy;
-	Ixn = I1xn + delta_pipi * I2xn + tau_pipi * I4xn;
-	Iyy = I1yy + delta_pipi * I2yy + tau_pipi * I4yy;
-	Iyn = I1yn + delta_pipi * I2yn + tau_pipi * I4yn;
-	Inn = I1nn + delta_pipi * I2nn + tau_pipi * I4nn;
 
-//
-	PRECISION dpitt = 2 * beta_pi * stt - pitt * taupiInv - Itt - 2 * un * t * pitn;
-	PRECISION dpitx = 2 * beta_pi * stx - pitx * taupiInv - Itx - un * t * pixn;
-	PRECISION dpity = 2 * beta_pi * sty - pity * taupiInv - Ity - un * t * piyn;
-	PRECISION dpitn = 2 * beta_pi * stn - pitn * taupiInv - Itn - un * t * pinn - (ut * pitn + un * pitt) / t;
-	PRECISION dpixx = 2 * beta_pi * sxx - pixx * taupiInv - Ixx;
-	PRECISION dpixy = 2 * beta_pi * sxy - pixy * taupiInv - Ixy;
-	PRECISION dpixn = 2 * beta_pi * sxn - pixn * taupiInv - Ixn - (ut * pixn + un * pitx) / t;
-	PRECISION dpiyy = 2 * beta_pi * syy - piyy * taupiInv - Iyy;
-	PRECISION dpiyn = 2 * beta_pi * syn - piyn * taupiInv - Iyn - (ut * piyn + un * pity) / t;
-	PRECISION dpinn = 2 * beta_pi * snn - pinn * taupiInv - Inn - 2 * (ut * pinn + un * pitn) / t;
+	PRECISION dpitt = 2.0 * beta_pi * stt - pitt * taupiInv - Itt - 2.0 * un * t * pitn;
+	PRECISION dpitx = 2.0 * beta_pi * stx - pitx * taupiInv - Itx - un * t * pixn;
+	PRECISION dpity = 2.0 * beta_pi * sty - pity * taupiInv - Ity - un * t * piyn;
+	PRECISION dpitn = 2.0 * beta_pi * stn - pitn * taupiInv - Itn - un * t * pinn - (ut * pitn + un * pitt) / t;
+	PRECISION dpixx = 2.0 * beta_pi * sxx - pixx * taupiInv - Ixx;
+	PRECISION dpixy = 2.0 * beta_pi * sxy - pixy * taupiInv - Ixy;
+	PRECISION dpixn = 2.0 * beta_pi * sxn - pixn * taupiInv - Ixn - (ut * pixn + un * pitx) / t;
+	PRECISION dpiyy = 2.0 * beta_pi * syy - piyy * taupiInv - Iyy;
+	PRECISION dpiyn = 2.0 * beta_pi * syn - piyn * taupiInv - Iyn - (ut * piyn + un * pity) / t;
+	PRECISION dpinn = 2.0 * beta_pi * snn - pinn * taupiInv - Inn - 2.0 * (ut * pinn + un * pitn) / t;
 
 	/*********************************************************\
 	 * bulk viscous pressure source terms, i.e. terms on RHS
@@ -679,7 +630,7 @@ PRECISION t, PRECISION e, const PRECISION * const __restrict__ pvec, int s) {
 	PRECISION facY = 1 / d_dy / 2;
 	PRECISION facZ = 1 / d_dz / 2;
 
-	#ifndef MINMOD_FOR_U_AND_P
+	#ifndef USE_APPROX_DERIVATIVE
 	//use central finite difference
 
 	// dx of u^{\mu} components
